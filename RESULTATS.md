@@ -11,7 +11,8 @@ source et ses limites.
 ## 2. Démarche
 1. **Simulation** (vérité connue) : AR(1), AR(2), MA(1), ARIMA(1,1,1), ARCH(1),
    GARCH(1,1), chacun avec un cas « sage » et un cas « limite ».
-2. **Monte Carlo** : 200 répétitions par taille $T \in \{20, \dots, 2000\}$ ;
+2. **Monte Carlo** : 1000 répétitions par taille
+   $T \in \{20, 30, 50, 75, 100, 150, 200, 300, 500, 750, 1000, 2000\}$ ;
    biais, RMSE relatif et couverture de l'IC à 95 % des paramètres.
 3. **Données réelles** : Brent et WTI quotidiens (FRED, 2010 → oct. 2026).
 4. **Prévision glissante** sur Brent (fenêtre de 1000 jours, ré-estimation tous
@@ -24,22 +25,29 @@ et tous les $T$ plus grands de la grille (jusqu'à 2000).
 
 | Modèle | Sage | Limite |
 |---|---|---|
-| AR(1) | 75 | 20 (ne casse pas) |
+| AR(1) | 50 | 20 (ne casse pas) |
 | AR(2) | 500 | 300 |
-| MA(1) | 300 | 2000 (voir limite 1) |
+| MA(1) | 75 | 2000 (voir limite 1) |
 | ARIMA(1,1,1) | 500 | 2000 |
-| ARCH(1) | 500 | 200 |
-| GARCH(1,1) | $\beta$ : 750, $\alpha$ : 2000, $\omega$ : jamais | $\beta$ : 500, $\alpha$ : 750, $\omega$ : jamais |
+| ARCH(1) | 500 | 150 |
+| GARCH(1,1) | $\beta$ : 1000, $\alpha$ : 2000, $\omega$ : jamais | $\beta$ : 500, $\alpha$ : 1000, $\omega$ : jamais |
+
+Résultats à 1000 répétitions. Par rapport à un premier essai à 200
+répétitions, quatre cases ont bougé : AR(1) sage (75 → 50), MA(1) sage
+(300 → 75), ARCH(1) limite (200 → 150) et $\beta$ du GARCH sage (750 → 1000) ;
+l'ordre de grandeur et le classement des modèles sont inchangés.
 
 Constats :
 - **ARIMA(1,1,1) limite** ($\phi=0.9$, $\theta=-0.85$, racines AR et MA quasi
-  identiques) est le pire cas : erreur relative de $\phi$ de 110 % à $T=20$,
-  43 % à $T=1000$ ; couverture de 66 à 78 % jusqu'à $T=500$. Les résidus passent
-  pourtant Ljung-Box (p = 0.96 sur un tirage à $T=1000$) : le diagnostic
-  rassure alors que les paramètres sont faux.
-- **GARCH(1,1)** : couverture de $\alpha$ de 66-75 % pour $T$ entre 20 et 150 ;
-  solutions au bord ($\hat\alpha=0$, $\hat\beta=1$) à $T=50$.
-- **AR** : couverture de 92 à 98 % à toutes les tailles, $T \approx 75$ suffit
+  identiques) est le pire cas : erreur relative de $\phi$ de 114 % à $T=20$,
+  44 % à $T=1000$, 16 % à $T=2000$ ; couverture de 70 à 79 % jusqu'à $T=500$,
+  87 % à $T=1000$, 91 % à $T=2000$. Les résidus passent pourtant Ljung-Box
+  (p = 0.96 sur un tirage à $T=1000$) : le diagnostic rassure alors que les
+  paramètres sont faux.
+- **GARCH(1,1) sage** : couverture de $\alpha$ de 63 à 78 % pour $T$ de 20 à 150,
+  et seulement 90 % à $T=500$ ; solutions au bord ($\hat\alpha=0$, $\hat\beta=1$)
+  à $T=50$.
+- **AR** : couverture de 94 à 96 % à toutes les tailles, $T \approx 50$ suffit
   pour AR(1). Le cas limite $\phi=0.98$ n'est pas pire (convergence plus rapide
   près de la racine unité) ; son risque est ailleurs (prévision longue, confusion
   avec une marche aléatoire).
@@ -110,9 +118,11 @@ Test de Diebold-Mariano sur le score d'intervalle (variance HAC, 5 retards) :
    l'incertitude, pas le point central.
 
 ## 8. Limites (à dire à l'oral)
-1. **Bruit de simulation** : 200 répétitions → couverture à ±0.02 près. Les cas
-   proches du seuil (ex. MA(1) limite, 0.87 à $T=1000$ puis 0.90 à $T=2000$)
-   basculent par hasard. À passer à 1000 répétitions pour les chiffres cités.
+1. **MA(1) limite ($\theta=0.98$)** : l'IC de $\theta$ couvre 97 à 99 % jusqu'à
+   $T=500$ (trop large), puis 91 % à $T=750$, 88 % à $T=1000$, 90 % à $T=2000$.
+   Avec 1000 répétitions, l'incertitude est d'environ ±0.01 : ce creux est un
+   effet réel (paramètre au bord de l'inversibilité, où l'approximation
+   normale de l'IC échoue), pas du bruit. Je ne l'ai pas expliqué plus avant.
 2. **Seuils choisis** (25 %/10 %, couverture 90 %) : arbitraires, à afficher.
 3. **Objets différents** : en simulation, l'IC d'un *paramètre* ; en prévision
    glissante, l'IC d'une *observation*. Les deux montrent un IC mal calibré,
@@ -131,7 +141,7 @@ Test de Diebold-Mariano sur le score d'intervalle (variance HAC, 5 retards) :
 ```
 pip install numpy pandas scipy statsmodels arch matplotlib pefile
 pip install "torch==2.6.0" "timesfm[torch]"        # TimesFM : voir note PC
-python run_demo.py ar1 limite                       # un scénario (simulation)
+python run_demo.py ar1 limite 1000                  # un scénario, 1000 répétitions
 python analyse_donnees.py                           # tests sur Brent/WTI
 python rolling_brent.py garch_t                     # prévision glissante
 python rolling_timesfm.py                           # TimesFM (1,3 Go de poids)
