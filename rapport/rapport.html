@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", function () {
 <body>
 
 <div class="titlepage">
-  <div class="kicker">ENSIIE · Hackathon 2027 · Projet 4</div>
+  <div class="kicker">ENSIIE · Hackathon 2026 · Projet 4</div>
   <h1>Un intervalle de confiance à 95&nbsp;% dit-il vrai&nbsp;?</h1>
   <div class="sub">Validation par simulation des modèles de séries temporelles<br>et mise à l'épreuve sur le prix du Brent</div>
   <div class="team">Grégoire Hunout<br>Rassim Takka<br>Yassine Boicra</div>
@@ -71,6 +71,13 @@ document.addEventListener("DOMContentLoaded", function () {
 <h1>1. Introduction</h1>
 <p>Les séries temporelles sont un outil standard en économétrie, en finance et en mathématiques appliquées. Un logiciel renvoie, pour un modèle ajusté, des paramètres estimés accompagnés d'un intervalle de confiance, ainsi que des prévisions assorties d'un intervalle de prévision. L'utilisateur lit ces intervalles comme une garantie : «&nbsp;à 95&nbsp;%&nbsp;». Le sujet du hackathon propose de prendre du recul en étudiant, par simulation, le comportement de ces modèles quand on fait varier la taille de l'échantillon et la volatilité, afin de mieux comprendre les résultats fournis sur des données réelles.</p>
 <p>Nous en tirons une question unique, mesurable&nbsp;: <i>la couverture réalisée d'un IC annoncé à 95&nbsp;% est-elle de 95&nbsp;%&nbsp;?</i> La simulation permet de la mesurer parce que le vrai paramètre est connu&nbsp;; les données réelles permettent de vérifier que le défaut observé existe hors du laboratoire, en comparant l'intervalle de prévision à la valeur effectivement réalisée.</p>
+<h2>L'argument en quelques lignes</h2>
+<div class="abstract">
+<p><b>Ce que promet un IC à 95&nbsp;%.</b> «&nbsp;Si on refaisait l'expérience 100 fois, la vraie valeur serait dans l'intervalle environ 95 fois.&nbsp;» Les 5 cas où elle n'y est pas sont <i>prévus</i> : ce n'est pas un défaut.</p>
+<p><b>Ce que nous testons.</b> Pas la qualité des prédictions, mais la <i>calibration</i> de la promesse : on mesure la fréquence réelle de «&nbsp;dedans&nbsp;» et on la compare aux 95&nbsp;% annoncés. C'est comme un prévisionniste météo qui annonce «&nbsp;70&nbsp;% de pluie&nbsp;» : s'il pleut réellement 4 fois sur 10 les jours où il l'annonce, il est mal calibré, même si ses prévisions ont l'air plausibles.</p>
+<p><b>Ce que nous trouvons.</b> La promesse n'est tenue que sous conditions. Selon la taille de l'échantillon et le régime de volatilité, la fréquence réelle vaut de 63&nbsp;% (le logiciel est <i>trop confiant</i>) à presque 100&nbsp;% (l'intervalle est <i>trop large</i>, donc peu informatif).</p>
+<p><b>Ce que nous ne disons pas.</b> Ni que les intervalles de confiance sont faux en général, ni que les modèles prédisent mal. Nous disons que le chiffre «&nbsp;95&nbsp;%&nbsp;» affiché ne suffit pas, et nous disons dans quelles conditions on peut s'y fier.</p>
+</div>
 <h2>Contributions</h2>
 <ul>
 <li>Un banc d'essai reproductible (<code>simts</code>) : simulation, estimation, diagnostics, prévision, Monte Carlo avec couverture des IC.</li>

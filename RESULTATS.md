@@ -1,6 +1,6 @@
 # Validation de modèles de séries temporelles par simulation : synthèse des résultats
 
-Hackathon ENSIIE 2027 (sujet d'Abass Sagna). État au 15/10/2026. Les chiffres
+Hackathon ENSIIE 2026 (sujet d'Abass Sagna). État au 15/10/2026. Les chiffres
 viennent des fichiers de `outputs/` et `data/` ; chaque affirmation indique sa
 source et ses limites.
 

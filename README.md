@@ -1,6 +1,6 @@
 # simts : validation de modèles de séries temporelles par simulation
 
-Hackathon ENSIIE 2027 (sujet proposé par Abass Sagna).
+Hackathon ENSIIE 2026 (sujet proposé par Abass Sagna).
 
 ## Question
 Combien d'observations faut-il pour que l'estimation d'un modèle de séries
