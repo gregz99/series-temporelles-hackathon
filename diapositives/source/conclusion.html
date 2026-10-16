@@ -1,0 +1,21 @@
+<section id="conclusion" data-transition="fade" data-section="Ce qu'on retient et les limites." style="background:#F7F5EF;color:#1B2430;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<h2 style="font-family:'EB Garamond', Georgia, serif;font-size:72px;font-weight:500;line-height:1.1;color:#13263F">Ce qu’on retient</h2>
+<div style="display:flex;flex-direction:column;gap:22px">
+<div style="display:flex;gap:32px;align-items:flex-start;background:#FFFFFF;padding:28px 36px;border:1px solid #E1DCCF;border-radius:16px">
+<p style="width:60px;font-family:'EB Garamond', Georgia, serif;font-size:64px;line-height:1;color:#1F4E79">1</p>
+<p style="flex:1;font-size:34px;line-height:1.35">Chaque anomalie <b>casse un modèle précis</b> et en épargne un autre : aucun n’est robuste à tout.</p>
+</div>
+<div style="display:flex;gap:32px;align-items:flex-start;background:#FFFFFF;padding:28px 36px;border:1px solid #E1DCCF;border-radius:16px">
+<p style="width:60px;font-family:'EB Garamond', Georgia, serif;font-size:64px;line-height:1;color:#1F4E79">2</p>
+<p style="flex:1;font-size:34px;line-height:1.35">Le logiciel <b>affiche la même précision</b> avec ou sans anomalie : l’intervalle d’un AR peut couvrir 0 %.</p>
+</div>
+<div style="display:flex;gap:32px;align-items:flex-start;background:#FFFFFF;padding:28px 36px;border:1px solid #E1DCCF;border-radius:16px">
+<p style="width:60px;font-family:'EB Garamond', Georgia, serif;font-size:64px;line-height:1;color:#1F4E79">3</p>
+<p style="flex:1;font-size:34px;line-height:1.35">Sur le pétrole, une <b>variance qui évolue</b> (GARCH ou TimesFM) corrige l’essentiel.</p>
+</div>
+</div>
+<p style="font-size:26px;line-height:1.4;color:#5B6573"><b>Limites :</b> tailles d’anomalies choisies par nous · 4 modèles sur 6 avec anomalies · un seul actif (Brent) · pas d’intervalle à 95 % pour TimesFM.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1100px;font-size:24px;color:#5B6573">Hackathon ENSIIE 2026 · Anomalies et séries temporelles · Code et rapport : dépôt GitHub du projet</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-size:24px;color:#5B6573">10 / 10</p>
+<aside>[8:40-9:30] Pour conclure, trois messages. Un : chaque anomalie casse un modèle précis et en épargne un autre. Un décalage de niveau détruit un AR et laisse un ARIMA intact, une valeur aberrante dégrade tous les paramètres, un changement de volatilité casse l’intervalle de prévision des modèles à variance constante, et des queues épaisses ne gênent que le GARCH. Deux : le logiciel affiche la même précision avec ou sans anomalie, et l’intervalle d’un AR peut ne contenir la vérité que 0 fois sur 100 sans qu’aucun avertissement n’apparaisse. Trois : sur le pétrole, une variance qui évolue dans le temps, qu’elle vienne d’un GARCH ou d’un modèle de fondation, corrige l’essentiel. Nos limites : les tailles d’anomalies sont nos choix, nous avons testé quatre modèles sur six avec anomalies, un seul actif, et TimesFM ne donne pas d’intervalle à 95 %. Merci, nous sommes prêts pour vos questions.</aside>
+</section>

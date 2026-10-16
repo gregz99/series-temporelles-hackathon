@@ -1,0 +1,23 @@
+<section id="sans-anomalie" data-transition="fade" data-section="Ce que la simulation montre, sans puis avec anomalie." style="background:#F7F5EF;color:#1B2430;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<h2 style="font-family:'EB Garamond', Georgia, serif;font-size:72px;font-weight:500;line-height:1.1;color:#13263F">Sans anomalie : combien d’observations faut-il&#160;?</h2>
+<div style="display:flex;gap:48px">
+<table style="width:1000px;font-size:30px;font-family:'IBM Plex Sans', Arial, sans-serif">
+<tr><th style="width:44%">Modèle</th><th style="width:28%">Cas sage</th><th style="width:28%">Cas limite</th></tr>
+<tr><td>AR(1)</td><td>50</td><td>20</td></tr>
+<tr><td>AR(2)</td><td>500</td><td>300</td></tr>
+<tr><td>MA(1)</td><td>75</td><td>20</td></tr>
+<tr><td>ARIMA(1,1,1)</td><td>500</td><td>2000</td></tr>
+<tr><td>ARCH(1)</td><td>500</td><td>100</td></tr>
+<tr><td>GARCH(1,1)</td><td>2000</td><td>1000</td></tr>
+</table>
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:20px;background:#13263F;padding:44px;border-radius:16px">
+<p style="font-family:'EB Garamond', Georgia, serif;font-size:96px;line-height:1;color:#F7F5EF">50 → 2000</p>
+<p style="font-size:30px;line-height:1.4;color:#F2EFE6">de l’AR(1) à l’estimation de α dans un GARCH</p>
+<p style="font-size:26px;line-height:1.4;color:#B9C4D3">Erreur relative ≤ 25 %, pour ce T et tous les plus grands. 1000 répétitions.</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#1F4E79">Un cas limite n’est pas toujours le plus difficile : l’AR(1) à φ = 0,98 est estimé plus vite qu’à φ = 0,5.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1100px;font-size:24px;color:#5B6573">Hackathon ENSIIE 2026 · Anomalies et séries temporelles</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-size:24px;color:#5B6573">4 / 10</p>
+<aside>[2:20-3:35] D’abord sans anomalie, c’est ce que demande le sujet : combien d’observations faut-il ? Le critère : l’erreur relative sur le paramètre passe sous 25 % pour ce T et pour tous les T plus grands. Résultat : une cinquantaine de points suffisent pour un AR(1), quelques centaines pour un AR(2), un ARIMA ou un ARCH, et il faut au moins 1000 à 2000 points pour estimer correctement le paramètre alpha d’un GARCH. Deux remarques. Un cas limite n’est pas toujours le plus difficile : un AR(1) à phi égal 0,98 est estimé plus vite qu’à 0,5, car près de la frontière l’estimateur converge plus vite. Et l’ARIMA(1,1,1) limite, dont les racines AR et MA se compensent presque, est le pire cas : il lui faut 2000 points pour atteindre 25 % d’erreur.</aside>
+</section>

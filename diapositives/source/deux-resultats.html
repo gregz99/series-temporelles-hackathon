@@ -1,0 +1,36 @@
+<section id="deux-resultats" data-transition="fade" style="background:#13263F;color:#F2EFE6;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<h2 style="font-family:'EB Garamond', Georgia, serif;font-size:72px;font-weight:500;line-height:1.1;color:#F7F5EF">Deux résultats à retenir</h2>
+<div style="display:flex;gap:48px">
+<div style="flex:1;display:flex;flex-direction:column;gap:22px;padding:40px;border:1px solid #3B5273;border-radius:16px">
+<h3 style="font-size:36px;font-weight:600;color:#8DB4DE">Décalage de niveau (+3 σ)</h3>
+<div style="display:flex;gap:28px;align-items:center">
+<p style="width:290px;font-family:'EB Garamond', Georgia, serif;font-size:84px;line-height:1;color:#F08A7E">+0,41</p>
+<p style="flex:1;font-size:28px;line-height:1.35">biais de φ dans un AR(1)</p>
+</div>
+<div style="display:flex;gap:28px;align-items:center">
+<p style="width:290px;font-family:'EB Garamond', Georgia, serif;font-size:84px;line-height:1;color:#F08A7E">0 %</p>
+<p style="flex:1;font-size:28px;line-height:1.35">couverture de son intervalle à 95 %</p>
+</div>
+<div style="display:flex;gap:28px;align-items:center">
+<p style="width:290px;font-family:'EB Garamond', Georgia, serif;font-size:84px;line-height:1;color:#8DD4A6">× 1,01</p>
+<p style="flex:1;font-size:28px;line-height:1.35">erreur de l’ARIMA(1,1,1), inchangée</p>
+</div>
+<p style="font-size:30px;line-height:1.35;color:#B9C4D3">La différenciation absorbe la rupture.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:22px;padding:40px;border:1px solid #3B5273;border-radius:16px">
+<h3 style="font-size:36px;font-weight:600;color:#8DB4DE">Queues épaisses (Student à 3 degrés)</h3>
+<div style="display:flex;gap:28px;align-items:center">
+<p style="width:290px;font-family:'EB Garamond', Georgia, serif;font-size:84px;line-height:1;color:#F08A7E">× 4,95</p>
+<p style="flex:1;font-size:28px;line-height:1.35">erreur sur α dans un GARCH</p>
+</div>
+<div style="display:flex;gap:28px;align-items:center">
+<p style="width:290px;font-family:'EB Garamond', Georgia, serif;font-size:84px;line-height:1;color:#8DD4A6">× 1,0</p>
+<p style="flex:1;font-size:28px;line-height:1.35">AR, MA et ARIMA : inchangés</p>
+</div>
+<p style="font-size:30px;line-height:1.35;color:#B9C4D3">Le GARCH confond valeurs extrêmes et changement de variance.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1100px;font-size:24px;color:#B9C4D3">Hackathon ENSIIE 2026 · Anomalies et séries temporelles</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-size:24px;color:#B9C4D3">6 / 10</p>
+<aside>[4:50-5:50] Deux résultats à retenir. À gauche, le décalage de niveau, quand la série saute et reste plus haut. Dans un AR(1), l’estimation de phi est biaisée de plus 0,41, parce que le saut fait ressembler la série à un processus très persistant, et l’intervalle de confiance annoncé contient la vraie valeur 0 fois sur 100. Mais l’ARIMA, qui différencie la série, absorbe complètement le saut : son erreur est multipliée par 1,01. C’est la justification pratique du d égal 1 face à une rupture. À droite, les queues épaisses, des chocs extrêmes fréquents. Les modèles de moyenne n’y sont presque pas sensibles. Le GARCH, lui, estime alpha presque 5 fois moins bien, car il confond des valeurs extrêmes avec des changements de variance. Ces chiffres sont pour T égal 1000.</aside>
+</section>

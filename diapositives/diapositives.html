@@ -1,0 +1,262 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Soutenance : anomalies et modèles de séries temporelles</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400..700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"><style>
+@page { size: 1920px 1080px; margin: 0; }
+html, body { margin: 0; padding: 0; }
+section { width: 1920px; height: 1080px; position: relative; box-sizing: border-box;
+          overflow: hidden; page-break-after: always; break-after: page; }
+h1, h2, h3, p, ul, ol { margin: 0; }
+ul, ol { padding-left: 44px; }
+li { margin-bottom: 10px; }
+hr { border: 0; margin: 0; }
+img { display: block; }
+table { border-collapse: collapse; }
+th { background: #13263F; color: #F7F5EF; font-weight: 600; padding: 12px 20px; text-align: center; border: 1px solid #13263F; }
+td { padding: 12px 20px; text-align: center; border: 1px solid #E1DCCF; background: #FFFFFF; }
+tr:nth-child(even) td { background: #F1EEE5; }
+</style></head><body><section id="cover" data-transition="fade" style="background:#13263F;color:#F2EFE6;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 128px;display:flex;flex-direction:column;justify-content:space-between;gap:48px">
+<p style="font-size:28px;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:#8DB4DE">ENSIIE · Hackathon 2026 · Projet 4</p>
+<div style="display:flex;flex-direction:column;gap:40px">
+<h1 style="font-family:'EB Garamond', Georgia, serif;font-size:104px;font-weight:500;line-height:1.08;color:#F7F5EF">Que deviennent les modèles de séries temporelles quand une anomalie survient&#160;?</h1>
+<p style="font-size:40px;color:#B9C4D3;line-height:1.35">Simulation de quatre anomalies et mise à l’épreuve sur le prix du Brent</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<hr style="border-top:2px solid #8DB4DE;width:160px">
+<p style="font-size:32px;color:#F2EFE6">Grégoire Hunout · Rassim Takka · Yassine Boicra</p>
+</div>
+
+</section>
+
+<section id="question" data-transition="fade" style="background:#F7F5EF;color:#1B2430;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<h2 style="font-family:'EB Garamond', Georgia, serif;font-size:72px;font-weight:500;line-height:1.1;color:#13263F">Ce que demande le sujet, et ce que nous ajoutons</h2>
+<div style="display:flex;gap:40px">
+<div style="flex:1;display:flex;flex-direction:column;gap:20px;background:#FFFFFF;padding:44px;border:1px solid #E1DCCF;border-radius:16px">
+<h3 style="font-size:40px;font-weight:600;color:#13263F">Le sujet demande</h3>
+<ul style="font-size:32px;line-height:1.4">
+<li>Simuler à T petit et à T grand</li>
+<li>Un paramètre sage, un cas limite</li>
+<li>Estimer, ACF et PACF, prévoir 5 pas</li>
+<li>Trouver le nombre minimal d’observations</li>
+</ul>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:20px;background:#13263F;padding:44px;border-radius:16px">
+<h3 style="font-size:40px;font-weight:600;color:#8DB4DE">Nous ajoutons</h3>
+<ul style="font-size:32px;line-height:1.4;color:#F2EFE6">
+<li>Provoquer des anomalies dont on connaît la nature, la taille et la date</li>
+<li>Mesurer ce qu’elles coûtent à l’estimation et à la prévision</li>
+<li>Les confronter à un cas réel : le Brent</li>
+</ul>
+</div>
+</div>
+<p style="font-family:'EB Garamond', Georgia, serif;font-size:48px;font-style:italic;line-height:1.2;color:#1F4E79">Une anomalie est un cas limite dont on connaît la cause.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1100px;font-size:24px;color:#5B6573">Hackathon ENSIIE 2026 · Anomalies et séries temporelles</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-size:24px;color:#5B6573">2 / 10</p>
+
+</section>
+
+<section id="methode" data-transition="fade" style="background:#F7F5EF;color:#1B2430;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<h2 style="font-family:'EB Garamond', Georgia, serif;font-size:72px;font-weight:500;line-height:1.1;color:#13263F">Méthode : simuler, estimer, comparer à la vérité</h2>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;background:#FFFFFF;padding:36px;border:1px solid #E1DCCF;border-radius:16px">
+<p style="font-family:'EB Garamond', Georgia, serif;font-size:64px;line-height:1;color:#1F4E79">1</p>
+<h3 style="font-size:40px;font-weight:600;color:#13263F">Simuler</h3>
+<p style="font-size:28px;line-height:1.4">Une série dont on connaît la formule, donc la bonne réponse</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;background:#FFFFFF;padding:36px;border:1px solid #E1DCCF;border-radius:16px">
+<p style="font-family:'EB Garamond', Georgia, serif;font-size:64px;line-height:1;color:#1F4E79">2</p>
+<h3 style="font-size:40px;font-weight:600;color:#13263F">Estimer</h3>
+<p style="font-size:28px;line-height:1.4">Avec les logiciels usuels, sur T − 5 points ; les 5 derniers servent de test</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;background:#FFFFFF;padding:36px;border:1px solid #E1DCCF;border-radius:16px">
+<p style="font-family:'EB Garamond', Georgia, serif;font-size:64px;line-height:1;color:#1F4E79">3</p>
+<h3 style="font-size:40px;font-weight:600;color:#13263F">Comparer</h3>
+<p style="font-size:28px;line-height:1.4">Erreur, intervalle de confiance, prévision à 5 pas, sur 500 à 1000 répétitions</p>
+</div>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;background:#13263F;padding:36px;border-radius:16px">
+<h3 style="font-size:36px;font-weight:600;color:#8DB4DE">6 modèles</h3>
+<p style="font-size:30px;line-height:1.45;color:#F2EFE6">AR(1) · AR(2) · MA(1) · ARIMA(1,1,1) · ARCH(1) · GARCH(1,1)</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;background:#13263F;padding:36px;border-radius:16px">
+<h3 style="font-size:36px;font-weight:600;color:#8DB4DE">4 anomalies, au milieu de la série</h3>
+<ul style="font-size:30px;line-height:1.4;color:#F2EFE6">
+<li>Valeur aberrante (+8 σ)</li>
+<li>Décalage de niveau (+3 σ)</li>
+<li>Volatilité × 3</li>
+<li>Queues épaisses (Student à 3 degrés)</li>
+</ul>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1100px;font-size:24px;color:#5B6573">Hackathon ENSIIE 2026 · Anomalies et séries temporelles</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-size:24px;color:#5B6573">3 / 10</p>
+
+</section>
+
+<section id="sans-anomalie" data-transition="fade" data-section="Ce que la simulation montre, sans puis avec anomalie." style="background:#F7F5EF;color:#1B2430;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<h2 style="font-family:'EB Garamond', Georgia, serif;font-size:72px;font-weight:500;line-height:1.1;color:#13263F">Sans anomalie : combien d’observations faut-il&#160;?</h2>
+<div style="display:flex;gap:48px">
+<table style="width:1000px;font-size:30px;font-family:'IBM Plex Sans', Arial, sans-serif">
+<tr><th style="width:44%">Modèle</th><th style="width:28%">Cas sage</th><th style="width:28%">Cas limite</th></tr>
+<tr><td>AR(1)</td><td>50</td><td>20</td></tr>
+<tr><td>AR(2)</td><td>500</td><td>300</td></tr>
+<tr><td>MA(1)</td><td>75</td><td>20</td></tr>
+<tr><td>ARIMA(1,1,1)</td><td>500</td><td>2000</td></tr>
+<tr><td>ARCH(1)</td><td>500</td><td>100</td></tr>
+<tr><td>GARCH(1,1)</td><td>2000</td><td>1000</td></tr>
+</table>
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:20px;background:#13263F;padding:44px;border-radius:16px">
+<p style="font-family:'EB Garamond', Georgia, serif;font-size:96px;line-height:1;color:#F7F5EF">50 → 2000</p>
+<p style="font-size:30px;line-height:1.4;color:#F2EFE6">de l’AR(1) à l’estimation de α dans un GARCH</p>
+<p style="font-size:26px;line-height:1.4;color:#B9C4D3">Erreur relative ≤ 25 %, pour ce T et tous les plus grands. 1000 répétitions.</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#1F4E79">Un cas limite n’est pas toujours le plus difficile : l’AR(1) à φ = 0,98 est estimé plus vite qu’à φ = 0,5.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1100px;font-size:24px;color:#5B6573">Hackathon ENSIIE 2026 · Anomalies et séries temporelles</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-size:24px;color:#5B6573">4 / 10</p>
+
+</section>
+
+<section id="anomalies" data-transition="fade" style="background:#F7F5EF;color:#1B2430;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:32px">
+<h2 style="font-family:'EB Garamond', Georgia, serif;font-size:72px;font-weight:500;line-height:1.1;color:#13263F">Chaque anomalie casse un modèle précis</h2>
+<img src="../outputs/rapport_anomalies.png" alt="Trois cartes de chaleur : couverture de l’intervalle de confiance, erreur d’estimation relative et part des valeurs test dans l’intervalle de prévision, pour quatre modèles et quatre anomalies" style="width:1664px;height:550px;object-fit:contain;background:#FFFFFF;border:1px solid #E1DCCF;border-radius:16px">
+<p style="font-size:28px;line-height:1.4;color:#5B6573">T = 500, 500 répétitions. Vert : le modèle tient. Rouge : il casse. Lecture : l’intervalle de confiance à 95 % devrait contenir le vrai paramètre 95 fois sur 100.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1100px;font-size:24px;color:#5B6573">Hackathon ENSIIE 2026 · Anomalies et séries temporelles</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-size:24px;color:#5B6573">5 / 10</p>
+
+</section>
+
+<section id="deux-resultats" data-transition="fade" style="background:#13263F;color:#F2EFE6;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<h2 style="font-family:'EB Garamond', Georgia, serif;font-size:72px;font-weight:500;line-height:1.1;color:#F7F5EF">Deux résultats à retenir</h2>
+<div style="display:flex;gap:48px">
+<div style="flex:1;display:flex;flex-direction:column;gap:22px;padding:40px;border:1px solid #3B5273;border-radius:16px">
+<h3 style="font-size:36px;font-weight:600;color:#8DB4DE">Décalage de niveau (+3 σ)</h3>
+<div style="display:flex;gap:28px;align-items:center">
+<p style="width:290px;font-family:'EB Garamond', Georgia, serif;font-size:84px;line-height:1;color:#F08A7E">+0,41</p>
+<p style="flex:1;font-size:28px;line-height:1.35">biais de φ dans un AR(1)</p>
+</div>
+<div style="display:flex;gap:28px;align-items:center">
+<p style="width:290px;font-family:'EB Garamond', Georgia, serif;font-size:84px;line-height:1;color:#F08A7E">0 %</p>
+<p style="flex:1;font-size:28px;line-height:1.35">couverture de son intervalle à 95 %</p>
+</div>
+<div style="display:flex;gap:28px;align-items:center">
+<p style="width:290px;font-family:'EB Garamond', Georgia, serif;font-size:84px;line-height:1;color:#8DD4A6">× 1,01</p>
+<p style="flex:1;font-size:28px;line-height:1.35">erreur de l’ARIMA(1,1,1), inchangée</p>
+</div>
+<p style="font-size:30px;line-height:1.35;color:#B9C4D3">La différenciation absorbe la rupture.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:22px;padding:40px;border:1px solid #3B5273;border-radius:16px">
+<h3 style="font-size:36px;font-weight:600;color:#8DB4DE">Queues épaisses (Student à 3 degrés)</h3>
+<div style="display:flex;gap:28px;align-items:center">
+<p style="width:290px;font-family:'EB Garamond', Georgia, serif;font-size:84px;line-height:1;color:#F08A7E">× 4,95</p>
+<p style="flex:1;font-size:28px;line-height:1.35">erreur sur α dans un GARCH</p>
+</div>
+<div style="display:flex;gap:28px;align-items:center">
+<p style="width:290px;font-family:'EB Garamond', Georgia, serif;font-size:84px;line-height:1;color:#8DD4A6">× 1,0</p>
+<p style="flex:1;font-size:28px;line-height:1.35">AR, MA et ARIMA : inchangés</p>
+</div>
+<p style="font-size:30px;line-height:1.35;color:#B9C4D3">Le GARCH confond valeurs extrêmes et changement de variance.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1100px;font-size:24px;color:#B9C4D3">Hackathon ENSIIE 2026 · Anomalies et séries temporelles</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-size:24px;color:#B9C4D3">6 / 10</p>
+
+</section>
+
+<section id="brent" data-transition="fade" data-section="Le Brent comme série à anomalies réelles, et TimesFM." style="background:#F7F5EF;color:#1B2430;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<h2 style="font-family:'EB Garamond', Georgia, serif;font-size:72px;font-weight:500;line-height:1.1;color:#13263F">Le Brent : trois épisodes d’anomalie réels</h2>
+<div style="display:flex;gap:48px;align-items:center">
+<img src="../outputs/rapport_brent_apercu.png" alt="Prix du Brent de 2010 à 2026, rendements journaliers et volatilité annualisée par année, avec 2020 en surbrillance" style="width:900px;height:675px;object-fit:contain;background:#FFFFFF;border:1px solid #E1DCCF;border-radius:16px">
+<div style="flex:1;display:flex;flex-direction:column;gap:26px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<p style="font-size:30px;font-weight:600;color:#13263F">2014 – 2016</p>
+<p style="font-size:28px;line-height:1.35">Krach pétrolier</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<p style="font-size:30px;font-weight:600;color:#13263F">2020</p>
+<p style="font-size:28px;line-height:1.35">Un jour à −64 % (21 avril), volatilité annuelle de 114 %</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<p style="font-size:30px;font-weight:600;color:#13263F">2026</p>
+<p style="font-size:28px;line-height:1.35">Retour d’un régime agité : 71 %</p>
+</div>
+<p style="font-size:28px;line-height:1.4;color:#B83A2E;font-weight:500">Les 5 plus gros jours de 2020 font passer l’écart-type d’une fenêtre de 2,78 à 3,98 : + 43 %.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1100px;font-size:24px;color:#5B6573">Hackathon ENSIIE 2026 · Anomalies et séries temporelles · Données FRED, 2010 – 2026</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-size:24px;color:#5B6573">7 / 10</p>
+
+</section>
+
+<section id="brent-modeles" data-transition="fade" style="background:#F7F5EF;color:#1B2430;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:32px">
+<h2 style="font-family:'EB Garamond', Georgia, serif;font-size:72px;font-weight:500;line-height:1.1;color:#13263F">La variance constante échoue à chaque épisode</h2>
+<img src="../outputs/brent_couverture_glissante.png" alt="Couverture réalisée glissante sur 100 jours de l’intervalle à 95 % pour le Brent, de 2014 à 2026 : la variance constante chute en 2015-2016, 2020 et 2026, GARCH reste proche de 0,95" style="width:1360px;height:569px;object-fit:contain;background:#FFFFFF;border:1px solid #E1DCCF;border-radius:16px">
+<p style="font-size:28px;line-height:1.4"><b style="color:#B83A2E">Rouge : variance constante.</b> <b style="color:#1F4E79">Bleu : GARCH.</b> Cible 0,95. En 2026, couverture de 0,68 contre 0,84 à 0,87 pour GARCH.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1100px;font-size:24px;color:#5B6573">Hackathon ENSIIE 2026 · Anomalies et séries temporelles · Prévision glissante, fenêtre de 1000 jours</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-size:24px;color:#5B6573">8 / 10</p>
+
+</section>
+
+<section id="timesfm" data-transition="fade" style="background:#F7F5EF;color:#1B2430;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<h2 style="font-family:'EB Garamond', Georgia, serif;font-size:72px;font-weight:500;line-height:1.1;color:#13263F">Ouverture : TimesFM 3.0, un modèle de Google sans réglage</h2>
+<div style="display:flex;gap:44px;align-items:center">
+<img src="../outputs/rapport_brent_couverture_periodes.png" alt="Couverture réalisée par période pour AR(1), GARCH gaussien, GARCH Student et TimesFM 3.0, à 95 % et à 80 %" style="width:1000px;height:391px;object-fit:contain;background:#FFFFFF;border:1px solid #E1DCCF;border-radius:16px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px">
+<p style="font-size:26px;color:#5B6573">Couverture de l’intervalle à 80 % (cible 0,80)</p>
+<div style="display:flex;gap:20px;align-items:baseline"><p style="width:170px;font-family:'EB Garamond', Georgia, serif;font-size:64px;line-height:1;color:#2E7D4F">0,803</p><p style="flex:1;font-size:28px">TimesFM 3.0</p></div>
+<div style="display:flex;gap:20px;align-items:baseline"><p style="width:170px;font-family:'EB Garamond', Georgia, serif;font-size:64px;line-height:1;color:#1F4E79">0,798</p><p style="flex:1;font-size:28px">GARCH Student</p></div>
+<div style="display:flex;gap:20px;align-items:baseline"><p style="width:170px;font-family:'EB Garamond', Georgia, serif;font-size:64px;line-height:1;color:#B83A2E">0,852</p><p style="flex:1;font-size:28px">Variance constante</p></div>
+</div>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;background:#13263F;padding:30px 36px;border-radius:16px"><p style="font-size:28px;line-height:1.4;color:#F2EFE6"><b>Indiscernable de GARCH</b> (écart +0,11, p = 0,10), <b>meilleur que la variance constante</b> (p &lt; 0,001).</p></div>
+<div style="flex:1;border:1px solid #B83A2E;padding:30px 36px;border-radius:16px"><p style="font-size:28px;line-height:1.4"><b style="color:#B83A2E">Limites :</b> pas d’intervalle à 95 % (déciles seulement) ; le préentraînement a pu voir des prix du pétrole.</p></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1100px;font-size:24px;color:#5B6573">Hackathon ENSIIE 2026 · Anomalies et séries temporelles · Test de Diebold-Mariano</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-size:24px;color:#5B6573">9 / 10</p>
+
+</section>
+
+<section id="conclusion" data-transition="fade" data-section="Ce qu'on retient et les limites." style="background:#F7F5EF;color:#1B2430;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<h2 style="font-family:'EB Garamond', Georgia, serif;font-size:72px;font-weight:500;line-height:1.1;color:#13263F">Ce qu’on retient</h2>
+<div style="display:flex;flex-direction:column;gap:22px">
+<div style="display:flex;gap:32px;align-items:flex-start;background:#FFFFFF;padding:28px 36px;border:1px solid #E1DCCF;border-radius:16px">
+<p style="width:60px;font-family:'EB Garamond', Georgia, serif;font-size:64px;line-height:1;color:#1F4E79">1</p>
+<p style="flex:1;font-size:34px;line-height:1.35">Chaque anomalie <b>casse un modèle précis</b> et en épargne un autre : aucun n’est robuste à tout.</p>
+</div>
+<div style="display:flex;gap:32px;align-items:flex-start;background:#FFFFFF;padding:28px 36px;border:1px solid #E1DCCF;border-radius:16px">
+<p style="width:60px;font-family:'EB Garamond', Georgia, serif;font-size:64px;line-height:1;color:#1F4E79">2</p>
+<p style="flex:1;font-size:34px;line-height:1.35">Le logiciel <b>affiche la même précision</b> avec ou sans anomalie : l’intervalle d’un AR peut couvrir 0 %.</p>
+</div>
+<div style="display:flex;gap:32px;align-items:flex-start;background:#FFFFFF;padding:28px 36px;border:1px solid #E1DCCF;border-radius:16px">
+<p style="width:60px;font-family:'EB Garamond', Georgia, serif;font-size:64px;line-height:1;color:#1F4E79">3</p>
+<p style="flex:1;font-size:34px;line-height:1.35">Sur le pétrole, une <b>variance qui évolue</b> (GARCH ou TimesFM) corrige l’essentiel.</p>
+</div>
+</div>
+<p style="font-size:26px;line-height:1.4;color:#5B6573"><b>Limites :</b> tailles d’anomalies choisies par nous · 4 modèles sur 6 avec anomalies · un seul actif (Brent) · pas d’intervalle à 95 % pour TimesFM.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1100px;font-size:24px;color:#5B6573">Hackathon ENSIIE 2026 · Anomalies et séries temporelles · Code et rapport : dépôt GitHub du projet</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-size:24px;color:#5B6573">10 / 10</p>
+
+</section>
+
+<section id="annexe-95" data-transition="fade" style="background:#F7F5EF;color:#1B2430;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<h2 style="font-family:'EB Garamond', Georgia, serif;font-size:72px;font-weight:500;line-height:1.1;color:#13263F">Annexe : d’où vient le « 95 % » ?</h2>
+<div style="display:flex;gap:40px">
+<div style="flex:1;display:flex;flex-direction:column;gap:22px;background:#13263F;padding:44px;border-radius:16px">
+<p style="font-size:26px;color:#8DB4DE">La formule du logiciel</p>
+<p style="font-family:'EB Garamond', Georgia, serif;font-size:54px;line-height:1.2;color:#F7F5EF">estimation ± 1,96 × erreur standard</p>
+<p style="font-size:28px;line-height:1.4;color:#F2EFE6">1,96 : la valeur de la loi normale qui laisse 95 % au centre. Le 95 % est une convention.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;background:#FFFFFF;padding:44px;border:1px solid #E1DCCF;border-radius:16px">
+<h3 style="font-size:36px;font-weight:600;color:#13263F">Elle suppose, sans le vérifier</h3>
+<ul style="font-size:28px;line-height:1.4">
+<li>T assez grand</li>
+<li>Paramètre loin des frontières</li>
+<li>Modèle bien spécifié</li>
+<li>Variance constante (en prévision)</li>
+</ul>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#1F4E79">Notre apport : mesurer la couverture réelle, de 0 % (AR avec décalage de niveau) à 99,6 % (variance constante, 2021 – 2025).</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1100px;font-size:24px;color:#5B6573">Annexe · Hackathon ENSIIE 2026 · Anomalies et séries temporelles</p>
+
+</section>
+</body></html>

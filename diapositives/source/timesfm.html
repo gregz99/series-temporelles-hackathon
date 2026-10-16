@@ -1,0 +1,19 @@
+<section id="timesfm" data-transition="fade" style="background:#F7F5EF;color:#1B2430;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<h2 style="font-family:'EB Garamond', Georgia, serif;font-size:72px;font-weight:500;line-height:1.1;color:#13263F">Ouverture : TimesFM 3.0, un modèle de Google sans réglage</h2>
+<div style="display:flex;gap:44px;align-items:center">
+<img src="/_blob/4a1b3cd6f59db11c9f1a5ed3599fa14c" alt="Couverture réalisée par période pour AR(1), GARCH gaussien, GARCH Student et TimesFM 3.0, à 95 % et à 80 %" style="width:1000px;height:391px;object-fit:contain;background:#FFFFFF;border:1px solid #E1DCCF;border-radius:16px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px">
+<p style="font-size:26px;color:#5B6573">Couverture de l’intervalle à 80 % (cible 0,80)</p>
+<div style="display:flex;gap:20px;align-items:baseline"><p style="width:170px;font-family:'EB Garamond', Georgia, serif;font-size:64px;line-height:1;color:#2E7D4F">0,803</p><p style="flex:1;font-size:28px">TimesFM 3.0</p></div>
+<div style="display:flex;gap:20px;align-items:baseline"><p style="width:170px;font-family:'EB Garamond', Georgia, serif;font-size:64px;line-height:1;color:#1F4E79">0,798</p><p style="flex:1;font-size:28px">GARCH Student</p></div>
+<div style="display:flex;gap:20px;align-items:baseline"><p style="width:170px;font-family:'EB Garamond', Georgia, serif;font-size:64px;line-height:1;color:#B83A2E">0,852</p><p style="flex:1;font-size:28px">Variance constante</p></div>
+</div>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;background:#13263F;padding:30px 36px;border-radius:16px"><p style="font-size:28px;line-height:1.4;color:#F2EFE6"><b>Indiscernable de GARCH</b> (écart +0,11, p = 0,10), <b>meilleur que la variance constante</b> (p &lt; 0,001).</p></div>
+<div style="flex:1;border:1px solid #B83A2E;padding:30px 36px;border-radius:16px"><p style="font-size:28px;line-height:1.4"><b style="color:#B83A2E">Limites :</b> pas d’intervalle à 95 % (déciles seulement) ; le préentraînement a pu voir des prix du pétrole.</p></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1100px;font-size:24px;color:#5B6573">Hackathon ENSIIE 2026 · Anomalies et séries temporelles · Test de Diebold-Mariano</p>
+<p style="position:absolute;right:128px;bottom:64px;width:200px;text-align:right;font-size:24px;color:#5B6573">9 / 10</p>
+<aside>[7:50-8:40] En ouverture, nous testons TimesFM 3.0, un modèle de fondation de Google sorti en août 2026, avec 330 millions de paramètres, entraîné sur plus de mille milliards de points. Nous l’utilisons sans l’ajuster à nos données : c’est du zéro-shot, avec les mêmes contextes et les mêmes cibles que les autres modèles. Il ne fournit que des déciles, donc nous comparons tous les modèles à 80 %. Résultat : couverture de 0,803 pour TimesFM, 0,798 pour le GARCH Student, 0,852 pour la variance constante, la cible étant 0,80. Au test de Diebold-Mariano, TimesFM est meilleur que la variance constante avec p inférieur à 0,001 et indiscernable du GARCH avec p égal 0,10. Deux limites : il ne donne pas d’intervalle à 95 %, donc nous ne jugeons pas ses queues, et son préentraînement a pu inclure des données de pétrole, ce que nous ne pouvons pas exclure.</aside>
+</section>

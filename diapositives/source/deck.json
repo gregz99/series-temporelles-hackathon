@@ -1,0 +1,18 @@
+{
+  "v": 4,
+  "createdOnFiles": {"v": 1, "at": "2026-10-16T03:00:00Z"},
+  "lists": "css",
+  "title": "Soutenance : anomalies et modèles de séries temporelles",
+  "order": ["cover", "question", "methode", "sans-anomalie", "anomalies", "deux-resultats", "brent", "brent-modeles", "timesfm", "conclusion", "annexe-95"],
+  "sections": {
+    "intro": {"description": "La question posée par le sujet et notre méthode.", "start": "cover"},
+    "simulation": {"description": "Ce que la simulation montre, sans puis avec anomalie.", "start": "sans-anomalie"},
+    "reel": {"description": "Le Brent comme série à anomalies réelles, et TimesFM.", "start": "brent"},
+    "fin": {"description": "Ce qu'on retient et les limites.", "start": "conclusion"}
+  },
+  "faces": {
+    "eb-garamond": {"family": "EB Garamond", "href": "https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400..700&display=swap"},
+    "ibm-plex-sans": {"family": "IBM Plex Sans", "href": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap"}
+  },
+  "designSystems": []
+}
