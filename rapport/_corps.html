@@ -1,0 +1,175 @@
+<body>
+
+<div class="titlepage">
+  <div class="kicker">ENSIIE · Hackathon 2026 · Projet 4</div>
+  <h1>Que deviennent les modèles de séries temporelles quand une anomalie survient&nbsp;?</h1>
+  <div class="sub">Simulation de quatre types d'anomalies<br>et mise à l'épreuve sur le prix du Brent</div>
+  <div class="team">Grégoire Hunout<br>Rassim Takka<br>Yassine Boicra</div>
+  <div class="meta">Sujet proposé par Abass Sagna<br>Rendu du 16 octobre 2026</div>
+</div>
+
+<h1 class="first">Résumé</h1>
+<div class="abstract">
+<p>Le sujet demande d'étudier, par simulation, le comportement des modèles de séries temporelles quand on fait varier la taille des données et la volatilité, afin de mieux comprendre les résultats fournis par les logiciels sur données réelles. Nous procédons en trois temps, sur six modèles (AR(1), AR(2), MA(1), ARIMA(1,1,1), ARCH(1), GARCH(1,1)). <b>(1) Sans anomalie</b>, nous déterminons le nombre minimal d'observations (1000 répétitions) : de 50 pour un AR(1) à 2000 pour l'estimation de $\alpha$ dans un GARCH(1,1). <b>(2) Avec anomalie</b>, nous injectons dans la série une valeur aberrante, un décalage de niveau, un changement de volatilité ou des queues épaisses, et nous mesurons ce que cela coûte à l'estimation et à la prévision (500 répétitions). <b>(3) Sur le Brent</b> (FRED, 2010-2026), qui traverse trois épisodes d'anomalie réels (2015-2016, 2020, 2026), nous éprouvons ces résultats en prévision glissante, avec GARCH et le modèle de fondation TimesFM 3.0 de Google.</p>
+<p><b>Résultats.</b> Chaque anomalie casse un modèle précis et en épargne d'autres. Un décalage de niveau de +3 écarts-types biaise $\hat\phi$ de +0,41 dans un AR(1) (couverture de l'IC à 0&nbsp;%) mais est sans effet sur un ARIMA(1,1,1)&nbsp;; une valeur aberrante multiplie l'erreur d'estimation par 1,6 à 1,9 et ne se résorbe pas avec $T$&nbsp;; un changement de volatilité laisse les paramètres presque intacts mais l'intervalle de prévision ne couvre que 85&nbsp;% au lieu de 95&nbsp;% pour les modèles à variance constante&nbsp;; des queues épaisses n'affectent pas les modèles de moyenne mais dégradent par cinq l'estimation de $\alpha$ dans un GARCH. Sur le Brent, les 5 plus gros jours de 2020 gonflent l'écart-type d'une fenêtre de 43&nbsp;%, et la variance constante échoue à chaque épisode (couverture de 0,68 en 2026) alors que GARCH et TimesFM suivent le régime.</p>
+</div>
+
+<h1>1. Introduction</h1>
+<p>Les séries temporelles sont un outil standard en économétrie, en finance et en mathématiques appliquées. Le sujet du hackathon propose d'en prendre du recul en simulant des séries dont on connaît le modèle, afin d'observer comment l'estimation et la prévision se comportent quand on fait varier la taille de l'échantillon, les paramètres ou la volatilité.</p>
+<p>La consigne précise qu'on doit choisir « un paramètre pour lequel le modèle se comporte bien et un cas limite où il se comporte moins bien ». Nous prolongeons cette idée d'un pas&nbsp;: <b>plutôt que de seulement approcher une frontière de paramètres, nous provoquons des anomalies, c'est-à-dire des événements dont on connaît la nature, la taille et la date.</b> C'est ce qui se passe dans les données réelles lors d'une crise, d'un changement de régime ou d'une erreur de saisie, et c'est là que les logiciels sont utilisés sans que leurs résultats soient remis en question.</p>
+<h2>La question</h2>
+<p><i>Que deviennent l'estimation et la prévision d'un modèle de séries temporelles quand une anomalie survient, et de quelle taille d'échantillon a-t-on besoin sans anomalie&nbsp;?</i></p>
+<h2>Démarche et contributions</h2>
+<ul>
+<li><b>Ce que demande le sujet</b> (section 4) : simulation à $T$ petit et grand, cas sage et cas limite, estimation sur $T-5$ valeurs, ACF/PACF, prévision à 5 pas, nombre minimal d'observations.</li>
+<li><b>Notre extension</b> (section 5) : quatre types d'anomalies injectées, mesure du coût sur l'estimation, sur l'incertitude annoncée et sur la prévision.</li>
+<li><b>Épreuve du réel</b> (section 6) : le Brent comme série à anomalies réelles, avec prévision glissante et un modèle de fondation récent (TimesFM 3.0, août 2026).</li>
+<li><b>Un banc d'essai reproductible</b> (<code>simts</code>, dépôt GitHub) et des recommandations pratiques (section 7).</li>
+</ul>
+<h2>Le rôle de l'intervalle de confiance</h2>
+<p>Parmi les indicateurs, nous suivons la <i>couverture</i> de l'intervalle de confiance à 95&nbsp;%&nbsp;: la fréquence réelle avec laquelle la vraie valeur y tombe. Le 95&nbsp;% est une convention du logiciel (la valeur 1,96 de la loi normale), pas un résultat. Nous le prenons comme niveau annoncé et nous mesurons s'il est tenu&nbsp;; ce n'est pas la thèse du rapport, mais un indicateur qui montre quand le logiciel affiche une précision qu'il n'a plus.</p>
+
+<h1>2. Modèles, anomalies et indicateurs</h1>
+<h2>2.1 Les modèles</h2>
+<p>Soit $(\varepsilon_t)$ un bruit blanc d'écart-type $\sigma$. Les six modèles étudiés sont&nbsp;:</p>
+@@MODELES@@<p>L'estimation est faite par maximum de vraisemblance gaussienne (<code>statsmodels</code> pour les modèles ARIMA, <code>arch</code> pour ARCH/GARCH).</p>
+
+<h2>2.2 Les quatre anomalies</h2>
+<table>
+<caption>Tableau 1. Anomalies injectées au milieu de l'échantillon (σ : écart-type de la série, ou de sa différence première pour l'ARIMA).</caption>
+<tr><th class="l">Anomalie</th><th class="l">Définition</th><th class="l">Situation réelle évoquée</th></tr>
+<tr><td class="l"><b>Valeur aberrante</b></td><td class="l">une valeur isolée augmentée de +8 σ</td><td class="l">erreur de saisie, jour exceptionnel</td></tr>
+<tr><td class="l"><b>Décalage de niveau</b></td><td class="l">+3 σ à partir du milieu, durable</td><td class="l">rupture de régime, changement de définition</td></tr>
+<tr><td class="l"><b>Changement de volatilité</b></td><td class="l">innovations ×3 à partir du milieu</td><td class="l">crise, début de régime agité</td></tr>
+<tr><td class="l"><b>Queues épaisses</b></td><td class="l">innovations de Student à 3 degrés de liberté</td><td class="l">rendements financiers</td></tr>
+</table>
+<p class="note">Les tailles (8 σ, 3 σ, ×3, Student 3) sont des choix de notre part, pour provoquer un effet net ; nous n'affirmons pas qu'elles représentent des valeurs « typiques ».</p>
+
+<h2>2.3 Indicateurs</h2>
+<ul>
+<li><b>Erreur d'estimation</b> : biais et RMSE d'un paramètre, et RMSE relatif $\mathrm{RMSE}/|\theta_0|$.</li>
+<li><b>Nombre minimal d'observations</b> : plus petit $T$ de la grille tel que, pour ce $T$ <i>et tous les plus grands</i>, le RMSE relatif est ≤ 25&nbsp;% (ou 10&nbsp;%).</li>
+<li><b>Couverture</b> de l'IC à 95&nbsp;% d'un paramètre, estimée sur 1000 répétitions (incertitude de simulation ±0,014).</li>
+<li><b>Prévision à 5 pas</b> : RMSE sur les 5 dernières valeurs et part de ces valeurs tombant dans l'intervalle de prévision à 95&nbsp;%.</li>
+</ul>
+
+<h1>3. Protocole expérimental</h1>
+<h2>3.1 Scénarios sans anomalie</h2>
+<p>Chaque série est simulée par sa récurrence avec une période de chauffe de 200 points, une graine fixée et des innovations gaussiennes. Pour chaque modèle, un paramètre «&nbsp;sage&nbsp;» et un cas «&nbsp;limite&nbsp;» proche de la frontière de stationnarité ou d'inversibilité, comme le demande la consigne.</p>
+@@SCEN@@
+<h2>3.2 Découpage et diagnostics</h2>
+<p>Pour chaque tirage de taille $T$, on estime sur les $T-5$ premières valeurs, on vérifie l'ACF et la PACF, on teste les résidus (Ljung-Box, y compris sur les carrés) et on prévoit les 5 valeurs suivantes, comparées aux valeurs mises de côté.</p>
+<h2>3.3 Monte Carlo sans anomalie</h2>
+<p>1000 répétitions pour $T \in \{20, 30, 50, 75, 100, 150, 200, 300, 500, 750, 1000, 2000\}$, graines communes entre les $T$.</p>
+<h2>3.4 Monte Carlo avec anomalies</h2>
+<p>Quatre modèles au cas sage (AR(1) $\phi=0{,}5$&nbsp;; MA(1) $\theta=0{,}5$&nbsp;; ARIMA(1,1,1) $\phi=0{,}5$, $\theta=0{,}3$&nbsp;; GARCH(1,1) $\omega=0{,}1$, $\alpha=0{,}1$, $\beta=0{,}8$), chacune des quatre anomalies et une référence sans anomalie, 500 répétitions pour $T \in \{100, 250, 500, 1000\}$. L'anomalie est placée au milieu de l'échantillon d'apprentissage, jamais dans les 5 valeurs test. L'incertitude de simulation sur une couverture est ici d'environ ±0,02.</p>
+<h2>3.5 Données réelles et prévision glissante</h2>
+<p>Les prix quotidiens du Brent (<code>DCOILBRENTEU</code>) et du WTI (<code>DCOILWTICO</code>) viennent de FRED, du 4 janvier 2010 au 6 octobre 2026 (4108 jours communs). La prévision glissante utilise une fenêtre de 1000 jours, une ré-estimation tous les 5 jours depuis janvier 2014, et prévoit les rendements logarithmiques à 1 à 5 jours (647 origines, 3235 prévisions par modèle). Modèles : AR(1) à variance constante, ARIMA(1,1,1) sur le log-prix, GARCH(1,1) gaussien et GARCH(1,1) de Student.</p>
+<h2>3.6 TimesFM 3.0</h2>
+<p>TimesFM 3.0 (Google Research, août 2026, 330 millions de paramètres) est un modèle de fondation préentraîné pour la prévision. Nous l'utilisons en <i>zéro-shot</i> (mêmes contextes et mêmes cibles, sans entraînement). Il ne sort que les déciles 0,1 à 0,9 : la comparaison se fait donc à 80&nbsp;% ([q<sub>0,1</sub> ; q<sub>0,9</sub>]).</p>
+<h2>3.7 Tests statistiques</h2>
+<p>Score d'intervalle à 80&nbsp;% (Gneiting et Raftery, 2007), test de Diebold-Mariano (1995) avec variance de Newey-West à 5 retards, test de Kupiec (1995) pour la couverture.</p>
+
+<h1 class="newpage">4. Résultats sans anomalie : combien d'observations ?</h1>
+@@SEC41@@
+<h2>4.2 Nombre minimal d'observations</h2>
+<table>
+<caption>Tableau 4. Nombre minimal d'observations d'après l'erreur d'estimation seule (RMSE/|vrai| ≤ 25 % ou ≤ 10 %, pour ce T et tous les plus grands de la grille jusqu'à 2000 ; 1000 répétitions). « jamais » : critère non tenu jusqu'à T = 2000.</caption>
+<tr><th class="l">Modèle</th><th>Paramètre</th><th>Sage, 25 %</th><th>Sage, 10 %</th><th>Limite, 25 %</th><th>Limite, 10 %</th></tr>
+<tr><td class="l">AR(1)</td><td>φ</td><td class="good">50</td><td>300</td><td class="good">20</td><td class="good">30</td></tr>
+<tr><td class="l">AR(2)</td><td>φ₁ ; φ₂</td><td class="mid">75 ; 500</td><td>500 ; jamais</td><td class="mid">50 ; 300</td><td>300 ; 2000</td></tr>
+<tr><td class="l">MA(1)</td><td>θ</td><td class="good">75</td><td>500</td><td class="good">20</td><td class="good">50</td></tr>
+<tr><td class="l">ARIMA(1,1,1)</td><td>φ ; θ</td><td class="mid">150 ; 500</td><td>750 ; jamais</td><td class="bad">2000 ; 2000</td><td class="bad">jamais ; jamais</td></tr>
+<tr><td class="l">ARCH(1)</td><td>α</td><td class="mid">500</td><td>jamais</td><td class="mid">100</td><td>500</td></tr>
+<tr><td class="l">GARCH(1,1)</td><td>α ; β</td><td class="bad">2000 ; 500</td><td class="bad">jamais ; 2000</td><td class="bad">1000 ; 200</td><td class="bad">jamais ; 500</td></tr>
+</table>
+<p>Règle pratique&nbsp;: quelques dizaines de points suffisent pour un AR(1) ou un MA(1), quelques centaines pour AR(2), ARIMA et ARCH, et au moins un millier pour que $\alpha$ d'un GARCH soit estimé à 25&nbsp;% près. L'ARIMA(1,1,1) limite ($\phi=0{,}9$, $\theta=-0{,}85$) est le pire cas&nbsp;: les racines AR et MA se compensent presque, les deux paramètres sont mal déterminés et n'atteignent 25&nbsp;% d'erreur qu'à $T=2000$.</p>
+<p>Un cas limite n'est donc pas toujours le plus difficile : l'AR(1) à $\phi=0{,}98$ et le MA(1) à $\theta=0{,}98$ sont estimés <i>plus vite</i> que leurs cas sages (l'estimateur converge plus rapidement près de la frontière), alors que l'ARIMA et le GARCH limites sont les plus lents.</p>
+
+<h2>4.3 Un indicateur complémentaire : l'honnêteté de l'incertitude annoncée</h2>
+<figure><img src="../outputs/rapport_couverture_synthese.png"><figcaption>Figure 2. Couverture réalisée de l'IC à 95 % d'un paramètre en fonction de T (échelle log), 1000 répétitions. Bleu plein : cas sage ; rouge pointillé : cas limite ; bande grise : ± 1,96 écart-type de simulation autour de 0,95.</figcaption></figure>
+<p>L'erreur d'estimation ne dit pas tout : un paramètre peut être bien estimé alors que l'intervalle annoncé est faux. Le MA(1) limite ($\theta=0{,}98$) est estimé à 25&nbsp;% près dès $T=20$, mais son IC à 95&nbsp;% couvre 97 à 99&nbsp;% jusqu'à $T=500$, puis seulement 88&nbsp;% à $T=1000$ (effet réel, hors bruit ; nous l'attribuons à la frontière d'inversibilité sans l'avoir démontré). L'ARIMA limite ne couvre que 70 à 79&nbsp;% jusqu'à $T=500$, et le GARCH sage 63 à 78&nbsp;% pour $T\le150$. Les modèles AR restent à 94-96&nbsp;% partout.</p>
+
+<h1 class="newpage">5. Résultats avec anomalies</h1>
+<p>Le Tableau 5 et la Figure 3 résument 500 répétitions par cellule. Les valeurs de référence sont celles du même modèle sans anomalie, avec les mêmes graines.</p>
+<figure><img src="../outputs/rapport_anomalies.png"><figcaption>Figure 3. Effet de chaque anomalie sur quatre modèles (T = 500, 500 répétitions, cas sage). Gauche : couverture de l'IC à 95 % du paramètre principal. Milieu : erreur d'estimation relative à la référence (1 = sans anomalie). Droite : part des 5 valeurs test tombant dans l'intervalle de prévision à 95 %.</figcaption></figure>
+<table>
+<caption>Tableau 5. Coût d'une anomalie à T = 1000 (500 répétitions). RMSE/réf : erreur d'estimation du paramètre principal rapportée à la référence sans anomalie. Paramètre principal : φ (AR(1), ARIMA), θ (MA(1)), α (GARCH). Référence sans anomalie : couverture de l'IC 0,97 / 0,95 / 0,96 / 0,93 et prévision dans l'IC 0,95 / 0,95 / 0,96 / 0,95 (AR(1) / MA(1) / ARIMA / GARCH).</caption>
+<tr><th class="l">Anomalie</th><th class="l">Modèle</th><th>RMSE/réf</th><th>Couverture IC</th><th>Prévision dans l'IC</th></tr>
+<tr><td class="l" rowspan="4"><b>Valeur aberrante</b></td><td class="l">AR(1)</td><td class="bad">1,57</td><td class="bad">0,66</td><td>0,96</td></tr>
+<tr><td class="l">MA(1)</td><td class="bad">1,89</td><td class="bad">0,46</td><td>0,96</td></tr>
+<tr><td class="l">ARIMA(1,1,1)</td><td class="bad">1,68</td><td class="mid">0,75</td><td>0,96</td></tr>
+<tr><td class="l">GARCH(1,1)</td><td class="bad">1,83</td><td class="mid">0,88</td><td>0,96</td></tr>
+<tr><td class="l" rowspan="4"><b>Décalage de niveau</b></td><td class="l">AR(1)</td><td class="bad">16,29</td><td class="bad">0,00</td><td>0,97</td></tr>
+<tr><td class="l">MA(1)</td><td class="bad">10,14</td><td class="bad">0,00</td><td class="mid">0,82</td></tr>
+<tr><td class="l">ARIMA(1,1,1)</td><td class="good">1,01</td><td class="good">0,96</td><td>0,96</td></tr>
+<tr><td class="l">GARCH(1,1)</td><td class="mid">1,20</td><td class="good">0,96</td><td>1,00</td></tr>
+<tr><td class="l" rowspan="4"><b>Volatilité ×3</b></td><td class="l">AR(1)</td><td class="mid">1,31</td><td class="mid">0,82</td><td class="mid">0,85</td></tr>
+<tr><td class="l">MA(1)</td><td class="mid">1,28</td><td class="mid">0,77</td><td class="mid">0,85</td></tr>
+<tr><td class="l">ARIMA(1,1,1)</td><td class="mid">1,29</td><td class="mid">0,78</td><td class="mid">0,86</td></tr>
+<tr><td class="l">GARCH(1,1)</td><td class="good">0,88</td><td class="good">0,94</td><td class="good">0,94</td></tr>
+<tr><td class="l" rowspan="4"><b>Queues épaisses</b></td><td class="l">AR(1)</td><td>1,07</td><td>0,94</td><td>0,95</td></tr>
+<tr><td class="l">MA(1)</td><td>1,08</td><td>0,94</td><td>0,95</td></tr>
+<tr><td class="l">ARIMA(1,1,1)</td><td>0,97</td><td>0,96</td><td>0,95</td></tr>
+<tr><td class="l">GARCH(1,1)</td><td class="bad">4,95</td><td class="mid">0,80</td><td>0,95</td></tr>
+</table>
+
+<h2>5.1 Valeur aberrante isolée</h2>
+<p>Une seule valeur à +8 σ multiplie l'erreur d'estimation par 1,6 à 1,9 selon le modèle à $T=1000$, et fait tomber la couverture de l'IC à 46-88&nbsp;%. L'effet <b>ne se résorbe pas</b> avec $T$ (pour l'AR(1), 0,30 à $T=250$ puis 0,66 à $T=1000$, toujours loin de 0,95). La prévision à 5 pas n'est pas touchée : l'outlier est loin des valeurs test. Le coût est surtout un coût de <i>confiance</i>&nbsp;: les paramètres sont moins précis alors que le logiciel affiche la même précision.</p>
+<h2>5.2 Décalage de niveau : la différenciation protège</h2>
+<p>C'est l'anomalie la plus destructrice pour les modèles stationnaires&nbsp;: dans un AR(1), $\hat\phi$ est biaisé de <b>+0,41</b> (l'estimation approche 0,9 : le décalage fait ressembler la série à un processus très persistant) et la couverture de l'IC est de <b>0&nbsp;%</b>, à tous les $T$. Le MA(1) est dans le même cas (biais +0,27). L'ARIMA(1,1,1), qui différencie la série, <b>l'absorbe complètement</b> (RMSE ×1,01, couverture 0,96) : le décalage de niveau devient un simple point isolé de la série différenciée. C'est la justification pratique du « d = 1 » face à une rupture.</p>
+<h2>5.3 Changement de volatilité : les paramètres tiennent, l'intervalle non</h2>
+<p>Quand la volatilité triple à mi-parcours, l'estimation des paramètres de moyenne reste correcte (RMSE ×1,3) mais l'<b>intervalle de prévision</b> des modèles à variance constante ne contient plus que 85-86&nbsp;% des valeurs test au lieu de 95&nbsp;%. Le GARCH, qui adapte sa variance, reste à 94&nbsp;%. L'erreur de prévision elle-même est triplée pour tous (la volatilité est effectivement 3 fois plus grande) : aucun modèle ne la prévoit, la différence est dans l'incertitude annoncée.</p>
+<h2>5.4 Queues épaisses : l'ennemi du GARCH</h2>
+<p>Pour les modèles de moyenne, des innovations de Student à 3 degrés de liberté ne changent presque rien (RMSE ×0,97 à ×1,08, couverture 0,94-0,96). Pour le GARCH, l'estimation de $\alpha$ est <b>environ cinq fois moins précise</b> (RMSE ×4,95 à $T=1000$) avec une couverture de 0,80 : des valeurs extrêmes fréquentes sont confondues avec des changements de variance. Le bruit gaussien du maximum de vraisemblance n'est pas robuste à cela.</p>
+
+<h1 class="newpage">6. Anomalies réelles : le Brent</h1>
+<p>Le Brent est une série qui traverse trois épisodes d'anomalie réels&nbsp;: le krach de 2014-2016, la crise de 2020 (avec un jour à −64&nbsp;%) et la période agitée de 2026. Nous l'utilisons pour vérifier que les effets observés en simulation existent dans les données réelles.</p>
+@@BRENT_TESTS@@
+<h2>6.2 Une anomalie réelle de près : les 5 plus gros jours de 2020</h2>
+<table>
+<caption>Tableau 7. Fenêtres de 1000 jours : estimations avec et sans les 5 plus gros jours (mis à 0). Fenêtre se terminant le 31 déc. 2020 : jours du 9 et 31 mars, des 2, 21 et 22 avril 2020.</caption>
+<tr><th class="l">Fenêtre, cas</th><th>Écart-type</th><th>α</th><th>β</th><th>α + β</th><th>φ AR(1)</th></tr>
+<tr><td class="l">fin 2019, avec</td><td>2,11</td><td>0,053</td><td>0,922</td><td>0,976</td><td>−0,039</td></tr>
+<tr><td class="l">fin 2019, sans</td><td>2,01</td><td>0,042</td><td>0,936</td><td>0,978</td><td>−0,047</td></tr>
+<tr><td class="l">fin 2020, avec</td><td class="bad">3,98</td><td class="bad">0,144</td><td>0,831</td><td>0,976</td><td>−0,053</td></tr>
+<tr><td class="l">fin 2020, sans</td><td class="good">2,78</td><td class="good">0,101</td><td>0,871</td><td>0,972</td><td>−0,080</td></tr>
+</table>
+<p>Cinq jours sur 1000 suffisent à gonfler l'écart-type de la fenêtre de 43&nbsp;% et $\hat\alpha$ de 43&nbsp;%, tandis que la persistance $\alpha+\beta$ reste stable (≈ 0,97). C'est l'équivalent réel de la « valeur aberrante » de la section 5.1&nbsp;: quelques points gouvernent une partie des paramètres, sans que le logiciel le signale.</p>
+@@BRENT_ROLL@@
+@@BRENT_TFM@@
+
+<h1>7. Discussion et recommandations</h1>
+<h2>7.1 Ce que nous retenons</h2>
+<table>
+<caption>Tableau 10. Guide : que casse chaque anomalie, et que faire.</caption>
+<tr><th class="l">Anomalie</th><th class="l">Ce qui casse</th><th class="l">Ce qui résiste</th><th class="l">Remède</th></tr>
+<tr><td class="l">Valeur aberrante</td><td class="l">précision et IC de tous les paramètres</td><td class="l">prévision à court terme</td><td class="l">détecter et traiter (winsorisation, indicatrice)</td></tr>
+<tr><td class="l">Décalage de niveau</td><td class="l">AR, MA : biais fort, IC à 0 %</td><td class="l">ARIMA (différenciation), GARCH</td><td class="l">différencier ou modéliser la rupture</td></tr>
+<tr><td class="l">Volatilité ×3</td><td class="l">intervalle de prévision à variance constante</td><td class="l">paramètres de moyenne, GARCH</td><td class="l">variance dépendante du temps</td></tr>
+<tr><td class="l">Queues épaisses</td><td class="l">estimation de α du GARCH</td><td class="l">AR, MA, ARIMA</td><td class="l">innovations de Student</td></tr>
+</table>
+<p class="note">Les remèdes de la dernière colonne sont des pratiques usuelles en économétrie ; nous ne les avons pas testés dans cette étude (sauf la différenciation, section 5.2, et la variance dépendante du temps, sections 5.3 et 6).</p>
+<h2>7.2 Trois enseignements</h2>
+<ol>
+<li><b>Aucun modèle n'est robuste à tout</b>&nbsp;: chaque anomalie en casse un et en épargne un autre.</li>
+<li><b>Le logiciel affiche la même précision</b> avec ou sans anomalie&nbsp;: la couverture de l'IC tombe à 0&nbsp;% (décalage de niveau, AR) sans que rien n'avertisse l'utilisateur.</li>
+<li><b>Sur le pétrole, une variance dépendante du temps règle l'essentiel</b>, qu'elle vienne d'un GARCH ou d'un modèle de fondation.</li>
+</ol>
+<h2>7.3 Limites</h2>
+<ol>
+<li><b>Tailles d'anomalies choisies par nous</b> (8 σ, 3 σ, ×3, Student 3) et une seule position (le milieu) ; nous n'avons pas fait varier l'amplitude.</li>
+<li><b>Quatre modèles sur six</b> pour les anomalies, tous au cas sage ; AR(2) et ARCH(1) ne sont pas testés avec anomalies.</li>
+<li><b>500 répétitions</b> pour les anomalies : couverture à ±0,02 près.</li>
+<li><b>Objets différents</b> en simulation (IC d'un paramètre) et sur le Brent (IC d'une observation) : l'un ne confirme pas l'autre.</li>
+<li><b>Un seul actif</b>, une fenêtre (1000 jours), un pas de ré-estimation (5 jours) ; 51 points en 2020 et 37 en 2026.</li>
+<li><b>TimesFM</b> : pas d'IC à 95&nbsp;% ; le préentraînement sur plus de 1000 milliards de points réels ne permet pas d'exclure que des séries de pétrole en fassent partie ; poids sous licence non commerciale.</li>
+<li><b>Tests multiples</b> : une vingtaine de comparaisons Diebold-Mariano ; un résultat à $p\approx0{,}03$ est indicatif.</li>
+<li><b>Bruit gaussien uniquement</b> hors de l'anomalie « queues épaisses » ; prix de 2026 pris tels quels sur FRED, sans recoupement.</li>
+</ol>
+
+<h1>8. Conclusion</h1>
+<p>Sans anomalie, les modèles de séries temporelles demandent de quelques dizaines à plusieurs milliers d'observations selon le modèle et le paramètre, l'ARIMA aux racines presque compensées et le GARCH étant les plus exigeants. Avec anomalie, le résultat dépend du couple (anomalie, modèle) : un décalage de niveau détruit un AR et laisse un ARIMA intact, une valeur aberrante dégrade tous les paramètres sans se résorber, un changement de volatilité casse l'intervalle de prévision des modèles à variance constante, et des queues épaisses ne gênent que le GARCH. Le Brent, qui connaît trois épisodes de ce type, confirme que ces comportements existent hors du laboratoire, et qu'une variance dépendante du temps, qu'elle vienne d'un GARCH ou d'un modèle de fondation, corrige l'essentiel pour l'incertitude de prévision.</p>
+<p>Les extensions naturelles : faire varier l'amplitude des anomalies, tester AR(2) et ARCH(1), ajouter des méthodes robustes (modèles avec indicatrices, innovations de Student) et d'autres séries réelles.</p>
+
+@@ANNEXE@@

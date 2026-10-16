@@ -4,6 +4,17 @@ Hackathon ENSIIE 2026 (sujet d'Abass Sagna). État au 15/10/2026. Les chiffres
 viennent des fichiers de `outputs/` et `data/` ; chaque affirmation indique sa
 source et ses limites.
 
+> **Mise à jour du 16/10/2026** : le rapport (`rapport/rapport.pdf`) est
+> désormais construit autour des **anomalies** (valeur aberrante, décalage de
+> niveau, changement de volatilité, queues épaisses) et non autour du seul IC à
+> 95 %. Les sections 3 à 8 ci-dessous restent valables mais le rapport est la
+> version de référence. Résultats clés des anomalies (T = 1000, 500 répétitions) :
+> décalage de niveau, AR(1) : biais +0,41, couverture de l'IC 0 %, ARIMA(1,1,1)
+> inchangé ; valeur aberrante : erreur ×1,6 à ×1,9, IC 46-88 % ; volatilité ×3 :
+> prévision dans l'IC 85-86 % (variance constante) contre 94 % (GARCH) ; queues
+> épaisses : α du GARCH ×4,95. Brent : les 5 plus gros jours de 2020 gonflent
+> l'écart-type d'une fenêtre de 1000 jours de 43 % (3,98 contre 2,78).
+
 ## 1. Question
 > Un logiciel d'estimation annonce un intervalle à 95 %. Combien de fois dit-il
 > vrai, selon la taille de l'échantillon et le régime de volatilité ?
@@ -61,7 +72,7 @@ Source : FRED `DCOILBRENTEU` et `DCOILWTICO`, 4108 jours communs.
 | Mémoire des rendements | ACF(1) = −0.064 (Brent), −0.089 (WTI) | quasi vide |
 | Effet ARCH | ARCH-LM $p<10^{-98}$ | écrasant |
 | Cointégration Brent/WTI | Engle-Granger $p=0.0007$ | plausible |
-| Volatilité annuelle | 18 % (2013), 123 % (2020), 72 % (2026) | régimes |
+| Volatilité annuelle | 18 % (2013), 114 % (2020), 71 % (2026) | régimes |
 
 - Kurtosis de Brent seul : **95** ; **12,8** en retirant les 5 plus gros jours
   (tous entre mars et mai 2020). Le WTI vaut −37 $ le 20/04/2020 et Brent passe de

@@ -3,9 +3,13 @@
 Hackathon ENSIIE 2026 (sujet proposé par Abass Sagna).
 
 ## Question
-Combien d'observations faut-il pour que l'estimation d'un modèle de séries
-temporelles soit fiable, et dans quels cas (paramètres limites) un logiciel
-nous donne-t-il des résultats trompeurs ?
+Que deviennent l'estimation et la prévision d'un modèle de séries temporelles
+quand une anomalie survient (valeur aberrante, décalage de niveau, changement de
+volatilité, queues épaisses), et de quelle taille d'échantillon a-t-on besoin sans
+anomalie ? Application au Brent (FRED) et ouverture sur TimesFM 3.0.
+
+Rapport complet : `rapport/rapport.pdf` (sources : `rapport/_corps.html`,
+`rapport/_assemble.py`).
 
 ## Démarche (celle de la consigne)
 1. Choisir un modèle : AR(1/2), MA(1/2), ARIMA(1,1), ARCH(1), GARCH(1,1)
@@ -26,7 +30,9 @@ nous donne-t-il des résultats trompeurs ?
 | `simts/forecast.py` | prévision 5 pas, RMSE | validation hors échantillon |
 | `simts/experiment.py` | Monte Carlo sur une grille de T | un tirage ne prouve rien |
 | `simts/plots.py` | trajectoire+prévision, convergence | livrable de la consigne |
+| `simts/anomalies.py` | injection d'anomalies (outlier, niveau, volatilité, queues) | cause contrôlée d'échec |
 | `run_demo.py` | un scénario de bout en bout | point d'entrée |
+| `run_anomalies.py`, `resume_anomalies.py` | Monte Carlo avec anomalies, synthèse | ce que coûte une anomalie |
 
 ## Utilisation
 ```

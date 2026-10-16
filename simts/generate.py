@@ -18,7 +18,8 @@ def _innov(rng, n, dist="normal", df=5):
     raise ValueError(f"dist inconnue : {dist}")
 
 
-def simulate(model, params, T, seed=None, burn=200, dist="normal"):
+def simulate(model, params, T, seed=None, burn=200, dist="normal", df=5,
+             vol_scale=None):
     """Simule T observations.
 
     params selon le modèle :
@@ -28,15 +29,25 @@ def simulate(model, params, T, seed=None, burn=200, dist="normal"):
       arima : {"phi": [..], "theta": [..], "d": 1, "sigma": 1.0}
       arch  : {"omega": .., "alpha": [..]}
       garch : {"omega": .., "alpha": [..], "beta": [..]}
+
+    vol_scale : tableau de longueur T (facteur multiplicatif de l'innovation à
+    chaque date), pour simuler un changement de volatilité ; None = aucun.
+    df : degrés de liberté du Student si dist="t".
     """
     if model not in MODELS:
         raise ValueError(f"modèle inconnu : {model}")
     rng = np.random.default_rng(seed)
     n = T + burn
-    z = _innov(rng, n, dist)
+    z = _innov(rng, n, dist, df)
 
     if model in ("arch", "garch"):
-        return _simulate_garch(params, z, burn)
+        r = _simulate_garch(params, z, burn)
+        # choc de volatilité appliqué à l'observation, sans rétroaction sur
+        # la récurrence de σ_t (sinon le processus devient explosif)
+        return r if vol_scale is None else r * np.asarray(vol_scale, float)
+
+    if vol_scale is not None:
+        z = z * np.concatenate([np.ones(burn), np.asarray(vol_scale, float)])
 
     sigma = params.get("sigma", 1.0)
     eps = sigma * z

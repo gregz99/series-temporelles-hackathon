@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Validation des modèles de séries temporelles par simulation</title>
+<style>
+  @page { size: A4; margin: 22mm 20mm 22mm 20mm;
+          @bottom-center { content: counter(page); font: 9pt "Segoe UI", sans-serif; color: #666; } }
+  @page :first { @bottom-center { content: ""; } }
+  html { font-family: "Cambria", "Georgia", serif; font-size: 10.6pt; line-height: 1.45; color: #1a1a1a; }
+  body { margin: 0; }
+  h1, h2, h3 { font-family: "Segoe UI", "Calibri", sans-serif; color: #12355b; line-height: 1.2; }
+  h1 { font-size: 17pt; margin: 1.4em 0 0.5em; border-bottom: 2px solid #12355b; padding-bottom: 4px; break-after: avoid-page; }
+  h2, h3 { break-after: avoid-page; }
+  h1.newpage { page-break-before: always; }
+  h1.first { page-break-before: auto; }
+  h2 { font-size: 12.5pt; margin: 1.3em 0 0.4em; }
+  h3 { font-size: 11pt; margin: 1.1em 0 0.3em; }
+  p { margin: 0.5em 0; text-align: left; }
+  .katex { font-size: 1.02em; }
+  .titlepage { text-align: center; padding-top: 55mm; page-break-after: always; }
+  .titlepage .kicker { font-family: "Segoe UI", sans-serif; letter-spacing: 2px; text-transform: uppercase; color: #666; font-size: 10pt; }
+  .titlepage h1 { border: none; page-break-before: auto; font-size: 25pt; margin: 14mm 0 6mm; }
+  .titlepage .sub { font-size: 14pt; color: #444; margin-bottom: 30mm; font-style: italic; }
+  .titlepage .team { font-family: "Segoe UI", sans-serif; font-size: 12pt; line-height: 1.8; }
+  .titlepage .meta { margin-top: 24mm; color: #555; font-size: 10.5pt; }
+  .abstract { border-left: 4px solid #12355b; background: #f3f6fa; padding: 8px 14px; margin: 1em 0; }
+  figure { margin: 1em 0; page-break-inside: avoid; text-align: center; }
+  figure img { max-width: 100%; }
+  figcaption { font-size: 9.2pt; color: #444; margin-top: 4px; text-align: left; }
+  table { border-collapse: collapse; margin: 0.8em auto; font-size: 9.6pt; page-break-inside: avoid; font-family: "Segoe UI", "Calibri", sans-serif; }
+  th, td { border: 1px solid #c8d0da; padding: 3px 8px; text-align: center; }
+  th { background: #e8eef6; }
+  td.l, th.l { text-align: left; }
+  caption { caption-side: top; font-size: 9.2pt; color: #444; padding-bottom: 4px; text-align: left; }
+  .bad { background: #fbe3e0; } .good { background: #e3f2e6; } .mid { background: #fdf3d6; }
+  .note { font-size: 9.4pt; color: #444; }
+  .eq { text-align: center; margin: 0.6em 0; font-style: italic; }
+  ul, ol { margin: 0.4em 0 0.6em 1.3em; padding: 0; }
+  li { margin: 0.2em 0; }
+  code { font-family: "Consolas", monospace; font-size: 9.2pt; background: #f1f1f1; padding: 0 3px; }
+  .two { display: flex; gap: 10px; }
+  .two figure { flex: 1; }
+  .refs li { font-size: 9.4pt; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  renderMathInElement(document.body, {delimiters: [{left: "$", right: "$", display: false}], throwOnError: false});
+});
+</script>
+</head>
+<body>
+
+<div class="titlepage">
+  <div class="kicker">ENSIIE · Hackathon 2026 · Projet 4</div>
+  <h1>Un intervalle de confiance à 95&nbsp;% dit-il vrai&nbsp;?</h1>
+  <div class="sub">Validation par simulation des modèles de séries temporelles<br>et mise à l'épreuve sur le prix du Brent</div>
+  <div class="team">Grégoire Hunout<br>Rassim Takka<br>Yassine Boicra</div>
+  <div class="meta">Sujet proposé par Abass Sagna<br>Rendu du 16 octobre 2026</div>
+</div>
+
+<h1 class="first">Résumé</h1>
+<div class="abstract">
+<p>Les logiciels d'économétrie annoncent des intervalles de confiance (IC) à 95&nbsp;%. Nous mesurons à quelle fréquence cette annonce est vraie, en deux temps. Par simulation (1000 répétitions, tailles de 20 à 2000), nous étudions six modèles (AR(1), AR(2), MA(1), ARIMA(1,1,1), ARCH(1), GARCH(1,1)) dans un cas «&nbsp;sage&nbsp;» et un cas «&nbsp;limite&nbsp;». Sur données réelles, nous soumettons le prix du Brent (FRED, 2010-2026) à une prévision glissante comparant une variance constante, deux GARCH et le modèle de fondation TimesFM 3.0 de Google.</p>
+<p><b>Résultats.</b> (i) L'IC d'un paramètre ne couvre que 63 à 79&nbsp;% du temps pour GARCH et pour un ARIMA(1,1,1) aux racines presque compensées, et les diagnostics de résidus ne le détectent pas&nbsp;; les modèles AR sont sains dès $T\approx 50$. (ii) Sur le Brent, l'IC à 95&nbsp;% d'une variance constante couvre de 0,68 (2026) à 0,996 (2021-2025)&nbsp;: trop étroit en crise, trop large ensuite&nbsp;; GARCH corrige l'essentiel. (iii) TimesFM 3.0, sans aucun réglage, est indiscernable de GARCH à 80&nbsp;% (couverture 0,803, $p=0{,}10$ au test de Diebold-Mariano) et significativement meilleur que la variance constante.</p>
+</div>
+
+<h1>1. Introduction</h1>
+<p>Les séries temporelles sont un outil standard en économétrie, en finance et en mathématiques appliquées. Un logiciel renvoie, pour un modèle ajusté, des paramètres estimés accompagnés d'un intervalle de confiance, ainsi que des prévisions assorties d'un intervalle de prévision. L'utilisateur lit ces intervalles comme une garantie : «&nbsp;à 95&nbsp;%&nbsp;». Le sujet du hackathon propose de prendre du recul en étudiant, par simulation, le comportement de ces modèles quand on fait varier la taille de l'échantillon et la volatilité, afin de mieux comprendre les résultats fournis sur des données réelles.</p>
+<p>Nous en tirons une question unique, mesurable&nbsp;: <i>la couverture réalisée d'un IC annoncé à 95&nbsp;% est-elle de 95&nbsp;%&nbsp;?</i> La simulation permet de la mesurer parce que le vrai paramètre est connu&nbsp;; les données réelles permettent de vérifier que le défaut observé existe hors du laboratoire, en comparant l'intervalle de prévision à la valeur effectivement réalisée.</p>
+<h2>L'argument en quelques lignes</h2>
+<div class="abstract">
+<p><b>Ce que promet un IC à 95&nbsp;%.</b> «&nbsp;Si on refaisait l'expérience 100 fois, la vraie valeur serait dans l'intervalle environ 95 fois.&nbsp;» Les 5 cas où elle n'y est pas sont <i>prévus</i> : ce n'est pas un défaut.</p>
+<p><b>Ce que nous testons.</b> Pas la qualité des prédictions, mais la <i>calibration</i> de la promesse : on mesure la fréquence réelle de «&nbsp;dedans&nbsp;» et on la compare aux 95&nbsp;% annoncés. C'est comme un prévisionniste météo qui annonce «&nbsp;70&nbsp;% de pluie&nbsp;» : s'il pleut réellement 4 fois sur 10 les jours où il l'annonce, il est mal calibré, même si ses prévisions ont l'air plausibles.</p>
+<p><b>Ce que nous trouvons.</b> La promesse n'est tenue que sous conditions. Selon la taille de l'échantillon et le régime de volatilité, la fréquence réelle vaut de 63&nbsp;% (le logiciel est <i>trop confiant</i>) à presque 100&nbsp;% (l'intervalle est <i>trop large</i>, donc peu informatif).</p>
+<p><b>Ce que nous ne disons pas.</b> Ni que les intervalles de confiance sont faux en général, ni que les modèles prédisent mal. Nous disons que le chiffre «&nbsp;95&nbsp;%&nbsp;» affiché ne suffit pas, et nous disons dans quelles conditions on peut s'y fier.</p>
+</div>
+<h2>Contributions</h2>
+<ul>
+<li>Un banc d'essai reproductible (<code>simts</code>) : simulation, estimation, diagnostics, prévision, Monte Carlo avec couverture des IC.</li>
+<li>Une carte du <i>nombre minimal d'observations</i> par modèle, avec un critère explicite (erreur relative et couverture) et non un seul tirage.</li>
+<li>Une mise à l'épreuve sur le Brent en prévision glissante, de 2014 à octobre 2026, avec tests de significativité.</li>
+<li>Une ouverture vers un modèle de fondation récent (TimesFM 3.0, août 2026), comparé à GARCH.</li>
+</ul>
+<p>Le plan est le suivant&nbsp;: la section 2 rappelle les modèles et la notion de couverture&nbsp;; la section 3 décrit le protocole&nbsp;; la section 4 présente la simulation&nbsp;; la section 5 les données réelles&nbsp;; la section 6 discute les limites&nbsp;; la section 7 conclut.</p>
+
+<h1>2. Modèles et notations</h1>
+<p>Soit $(\varepsilon_t)$ un bruit blanc d'écart-type $\sigma$. Les six modèles étudiés sont&nbsp;:</p>
+<table>
+<tr><th class="l">Modèle</th><th class="l">Équation</th><th class="l">Condition</th></tr>
+<tr><td class="l">AR(1)</td><td class="l">X<sub>t</sub> = φ X<sub>t−1</sub> + ε<sub>t</sub></td><td class="l">|φ| &lt; 1</td></tr>
+<tr><td class="l">AR(2)</td><td class="l">X<sub>t</sub> = φ<sub>1</sub> X<sub>t−1</sub> + φ<sub>2</sub> X<sub>t−2</sub> + ε<sub>t</sub></td><td class="l">racines hors du cercle unité</td></tr>
+<tr><td class="l">MA(1)</td><td class="l">X<sub>t</sub> = ε<sub>t</sub> + θ ε<sub>t−1</sub></td><td class="l">|θ| &lt; 1 (inversibilité)</td></tr>
+<tr><td class="l">ARIMA(1,1,1)</td><td class="l">ΔX<sub>t</sub> = φ ΔX<sub>t−1</sub> + ε<sub>t</sub> + θ ε<sub>t−1</sub></td><td class="l">|φ|, |θ| &lt; 1</td></tr>
+<tr><td class="l">ARCH(1)</td><td class="l">r<sub>t</sub> = σ<sub>t</sub> z<sub>t</sub>, σ<sub>t</sub>² = ω + α r<sub>t−1</sub>²</td><td class="l">ω &gt; 0, 0 ≤ α &lt; 1</td></tr>
+<tr><td class="l">GARCH(1,1)</td><td class="l">σ<sub>t</sub>² = ω + α r<sub>t−1</sub>² + β σ<sub>t−1</sub>²</td><td class="l">α + β &lt; 1</td></tr>
+</table>
+<p>L'estimation est faite par maximum de vraisemblance gaussienne (<code>statsmodels</code> pour les modèles ARIMA, <code>arch</code> pour ARCH/GARCH).</p>
+<h2>Couverture et nombre minimal d'observations</h2>
+<p>Pour un paramètre $\theta_0$ et un IC $[\hat\ell,\hat u]$ à 95&nbsp;%, la <b>couverture</b> est $P(\hat\ell\le\theta_0\le\hat u)$, estimée par la fréquence sur $N=1000$ simulations. Une couverture inférieure à 95&nbsp;% signifie que le logiciel surestime sa précision&nbsp;; supérieure, qu'il la sous-estime. Avec $N=1000$, l'incertitude de simulation est d'environ ±0,014 (bande grisée des figures).</p>
+<p>Nous appelons <b>$T$ minimal</b> le plus petit $T$ de la grille tel que, pour ce $T$ <i>et tous les $T$ plus grands</i>, l'erreur relative du RMSE ($\mathrm{RMSE}/|\theta_0|$) est inférieure à 25&nbsp;% et la couverture est au moins de 90&nbsp;%. Exiger «&nbsp;tous les plus grands&nbsp;» évite le faux positif d'un $T$ qui passe par chance.</p>
+
+<h1>3. Protocole expérimental</h1>
+<h2>3.1 Simulation et scénarios</h2>
+<p>Chaque série est simulée par sa récurrence avec une période de chauffe de 200 points, une graine fixée et des innovations gaussiennes. Pour chaque modèle, nous choisissons un paramètre «&nbsp;sage&nbsp;» où le modèle se comporte bien, et un cas «&nbsp;limite&nbsp;» proche de la frontière de stationnarité ou d'inversibilité, comme le demande la consigne.</p>
+<table>
+<caption>Tableau 1. Paramètres des scénarios (σ = 1 pour les modèles de moyenne).</caption>
+<tr><th class="l">Modèle</th><th>Cas sage</th><th>Cas limite</th></tr>
+<tr><td class="l">AR(1)</td><td>φ = 0,5</td><td>φ = 0,98</td></tr>
+<tr><td class="l">AR(2)</td><td>φ = (0,5 ; 0,2)</td><td>φ = (0,7 ; 0,28)</td></tr>
+<tr><td class="l">MA(1)</td><td>θ = 0,5</td><td>θ = 0,98</td></tr>
+<tr><td class="l">ARIMA(1,1,1)</td><td>φ = 0,5 ; θ = 0,3</td><td>φ = 0,9 ; θ = −0,85</td></tr>
+<tr><td class="l">ARCH(1)</td><td>ω = 0,2 ; α = 0,4</td><td>ω = 0,2 ; α = 0,95</td></tr>
+<tr><td class="l">GARCH(1,1)</td><td>ω = 0,1 ; α = 0,1 ; β = 0,8</td><td>ω = 0,02 ; α = 0,08 ; β = 0,91</td></tr>
+</table>
+<h2>3.2 Découpage et diagnostics</h2>
+<p>Pour chaque tirage de taille $T$, on estime sur les $T-5$ premières valeurs, on vérifie l'ACF et la PACF, on teste les résidus (Ljung-Box, y compris sur les carrés pour l'effet ARCH) et on prévoit les 5 valeurs suivantes, comparées aux valeurs mises de côté.</p>
+<h2>3.3 Monte Carlo</h2>
+<p>Pour chaque scénario, 1000 répétitions pour $T \in \{20, 30, 50, 75, 100, 150, 200, 300, 500, 750, 1000, 2000\}$ (graines communes entre les $T$). Pour chaque paramètre, nous relevons le biais, le RMSE, le RMSE relatif et la couverture de l'IC à 95&nbsp;%.</p>
+<h2>3.4 Données réelles et prévision glissante</h2>
+<p>Les prix quotidiens du Brent (<code>DCOILBRENTEU</code>) et du WTI (<code>DCOILWTICO</code>) viennent de FRED, du 4 janvier 2010 au 6 octobre 2026 (4108 jours communs). La prévision glissante utilise une fenêtre de 1000 jours, une ré-estimation tous les 5 jours depuis janvier 2014, et prévoit les rendements logarithmiques à 1 à 5 jours (647 origines, 3235 prévisions par modèle). Les modèles comparés sont AR(1) à variance constante, ARIMA(1,1,1) sur le log-prix (équivalent à un ARMA(1,1) sur les rendements), GARCH(1,1) à innovations gaussiennes et GARCH(1,1) à innovations de Student.</p>
+<h2>3.5 TimesFM 3.0</h2>
+<p>TimesFM 3.0 (Google Research, août 2026, 330 millions de paramètres) est un modèle de fondation préentraîné pour la prévision de séries temporelles. Nous l'utilisons en <i>zéro-shot</i>&nbsp;: mêmes contextes (1000 derniers rendements) et mêmes cibles, sans aucun entraînement. Il ne fournit que les déciles 0,1 à 0,9&nbsp;: la comparaison avec lui se fait donc à 80&nbsp;% ([q<sub>0,1</sub> ; q<sub>0,9</sub>]).</p>
+<h2>3.6 Tests statistiques</h2>
+<ul>
+<li><b>Score d'intervalle</b> à 80&nbsp;% (Gneiting et Raftery, 2007)&nbsp;: largeur de l'IC plus une pénalité 2/α fois l'écart quand la valeur sort de l'IC. Plus bas, mieux.</li>
+<li><b>Diebold-Mariano</b> (1995) sur la différentielle de score, avec variance de Newey-West à 5 retards (les 5 jours d'une même origine partagent les mêmes paramètres).</li>
+<li><b>Kupiec</b> (1995)&nbsp;: test binomial de la couverture contre sa cible.</li>
+</ul>
+
+<h1 class="newpage">4. Résultats en simulation</h1>
+<h2>4.1 Un tirage unique ne prouve rien</h2>
+<p>La consigne demande, pour un tirage, l'estimation, l'ACF/PACF et la prévision à 5 pas. Le Tableau 2 montre ce que donne <i>un</i> tirage (graine 42).</p>
+<table>
+<caption>Tableau 2. Un seul tirage par cas (graine 42). Les « vrais » paramètres sont en dernière colonne.</caption>
+<tr><th class="l">Modèle, cas</th><th>T = 50</th><th>T = 1000</th><th>Vrais paramètres</th></tr>
+<tr><td class="l">AR(1), sage : $\hat\phi$</td><td>0,595</td><td>0,557</td><td>0,5</td></tr>
+<tr><td class="l">AR(1), limite : $\hat\phi$</td><td>0,941</td><td>0,970</td><td>0,98</td></tr>
+<tr><td class="l">ARIMA, limite : $(\hat\phi,\hat\theta)$</td><td>(0,32 ; −0,08)</td><td>(0,56 ; −0,44)</td><td>(0,9 ; −0,85)</td></tr>
+<tr><td class="l">GARCH, sage : $(\hat\alpha,\hat\beta)$</td><td>(0,00 ; 1,00)</td><td>(0,145 ; 0,638)</td><td>(0,1 ; 0,8)</td></tr>
+</table>
+<div class="two">
+<figure><img src="../outputs/ar1_sage_T50_prevision.png"><figcaption>Figure 1a. AR(1) sage, T = 50 : trajectoire et prévision à 5 pas avec IC à 95 %.</figcaption></figure>
+<figure><img src="../outputs/ar1_sage_T1000_prevision.png"><figcaption>Figure 1b. AR(1) sage, T = 1000.</figcaption></figure>
+</div>
+<p>Trois enseignements. D'abord, même à $T=1000$, $\hat\phi=0{,}557$ s'écarte de 0,5 de plus de deux erreurs standard&nbsp;: c'est le comportement normal d'un estimateur, et c'est pourquoi on répète. Ensuite, pour ARIMA limite, $T=1000$ donne $(\hat\phi,\hat\theta)=(0{,}56 ; -0{,}44)$ au lieu de $(0{,}9 ; -0{,}85)$ alors que le test de Ljung-Box sur les résidus affiche $p=0{,}96$&nbsp;: le diagnostic «&nbsp;rassure&nbsp;» sur un modèle aux paramètres faux. Enfin, pour GARCH sage à $T=50$, l'optimiseur renvoie une solution au bord, $\hat\alpha=0$, $\hat\beta=1$.</p>
+
+<h2>4.2 Couverture des IC en fonction de T</h2>
+<figure><img src="../outputs/rapport_couverture_synthese.png"><figcaption>Figure 2. Couverture réalisée de l'IC à 95 % d'un paramètre en fonction de T (échelle log), 1000 répétitions. Bleu plein : cas sage ; rouge pointillé : cas limite ; bande grise : ± 1,96 écart-type de simulation autour de 0,95.</figcaption></figure>
+<ul>
+<li><b>Modèles AR</b> : la couverture reste dans la bande de bruit pour tous les $T$ (94 à 96&nbsp;%). Pour AR(1) limite, elle est même légèrement trop haute aux petits $T$ (environ 0,98).</li>
+<li><b>MA(1) limite</b> ($\theta=0{,}98$) : IC trop large jusqu'à $T=500$ (0,97 à 0,99), puis effondrement à 0,91 ($T=750$), 0,88 ($T=1000$) et 0,90 ($T=2000$). Cet effet n'est pas du bruit (±0,01) ; nous l'attribuons à la frontière d'inversibilité, sans l'avoir démontré.</li>
+<li><b>ARIMA(1,1,1) limite</b> : la couverture de $\phi$ est de 0,70 à 0,79 jusqu'à $T=500$, 0,87 à $T=1000$, et n'atteint 0,91 qu'à $T=2000$. Les racines AR et MA se compensent presque ($\phi=0{,}9$, $\theta=-0{,}85$) : le modèle est quasi sur-paramétré.</li>
+<li><b>ARCH(1) limite</b> ($\alpha=0{,}95$) : 0,80 à $T=20$, 0,95 à $T=500$.</li>
+<li><b>GARCH(1,1)</b> : le creux est le plus marqué, 0,63 à $T=50$ pour le cas sage et environ 0,65 à $T=100$ pour le cas limite, avec retour vers 0,90 vers $T=500$.</li>
+</ul>
+
+<h2>4.3 Nombre minimal d'observations</h2>
+<table>
+<caption>Tableau 3. T minimal (erreur relative ≤ 25 % et couverture ≥ 90 %, pour ce T et tous les plus grands de la grille jusqu'à 2000). « jamais » : le critère n'est pas tenu jusqu'à T = 2000.</caption>
+<tr><th class="l">Modèle</th><th>Cas sage</th><th>Cas limite</th></tr>
+<tr><td class="l">AR(1)</td><td class="good">50</td><td class="good">20</td></tr>
+<tr><td class="l">AR(2)</td><td class="mid">500</td><td class="mid">300</td></tr>
+<tr><td class="l">MA(1)</td><td class="good">75</td><td class="bad">2000</td></tr>
+<tr><td class="l">ARIMA(1,1,1)</td><td class="mid">500</td><td class="bad">2000</td></tr>
+<tr><td class="l">ARCH(1)</td><td class="mid">500</td><td class="mid">150</td></tr>
+<tr><td class="l">GARCH(1,1)</td><td class="bad">β : 1000 ; α : 2000 ; ω : jamais</td><td class="bad">β : 500 ; α : 1000 ; ω : jamais</td></tr>
+</table>
+<p class="note">Un premier essai à 200 répétitions donnait des valeurs différentes pour quatre cases (AR(1) sage 75, MA(1) sage 300, ARCH(1) limite 200, β de GARCH sage 750). L'ordre de grandeur et le classement des modèles étaient inchangés.</p>
+<p>La règle pratique qui s'en dégage&nbsp;: quelques dizaines de points suffisent pour un AR(1), plusieurs centaines pour les modèles à deux paramètres de dynamique, et plus d'un millier pour qu'un GARCH donne des paramètres fiables. Le paramètre $\omega$ n'atteint jamais le critère&nbsp;: sa vraie valeur est petite, donc l'erreur relative est mécaniquement grande.</p>
+
+<h1 class="newpage">5. Résultats sur données réelles : le Brent</h1>
+<h2>5.1 Ce que justifient les données</h2>
+<figure><img src="../outputs/rapport_brent_apercu.png"><figcaption>Figure 3. Brent (FRED, quotidien). Haut : prix. Milieu : rendements journaliers. Bas : volatilité annualisée par année. 2020 en jaune.</figcaption></figure>
+<table>
+<caption>Tableau 4. Tests préalables (4108 jours communs Brent/WTI).</caption>
+<tr><th class="l">Question</th><th>Résultat</th><th>Verdict</th></tr>
+<tr><td class="l">Racine unitaire (ADF, log-niveau)</td><td>Brent p = 0,063 ; WTI p = 0,032</td><td class="mid">ambigu</td></tr>
+<tr><td class="l">Mémoire des rendements</td><td>ACF(1) = −0,064 (Brent), −0,089 (WTI)</td><td class="mid">quasi vide</td></tr>
+<tr><td class="l">Effet ARCH (ARCH-LM)</td><td>p &lt; 10<sup>−98</sup></td><td class="good">écrasant</td></tr>
+<tr><td class="l">Cointégration Brent/WTI</td><td>Engle-Granger p = 0,0007</td><td class="good">plausible</td></tr>
+<tr><td class="l">Volatilité annualisée</td><td>18 % (2013), 123 % (2020), 72 % (2026)</td><td class="mid">régimes</td></tr>
+</table>
+<p>Les rendements du Brent n'ont presque aucune mémoire en moyenne mais une volatilité fortement dépendante du temps&nbsp;: c'est le terrain naturel de GARCH. La kurtosis de Brent seul vaut 95&nbsp;; elle tombe à 12,8 quand on retire les 5 plus grands jours, tous entre mars et mai 2020 (le prix passe de 17,36 à 9,12 dollars le 21 avril 2020, soit −64&nbsp;%). Le WTI est négatif (−37 dollars) le 20 avril 2020, ce qui exclut ce jour du calcul des log-rendements.</p>
+
+<h2>5.2 Prévision glissante : variance constante contre GARCH</h2>
+<table>
+<caption>Tableau 5. Couverture réalisée de l'IC à 95 % (horizon 1 jour ; cible 0,95).</caption>
+<tr><th class="l">Période</th><th>n</th><th>AR(1)</th><th>GARCH gaussien</th><th>GARCH Student</th></tr>
+<tr><td class="l">2014-2019</td><td>306</td><td class="bad">0,899</td><td>0,931</td><td class="good">0,948</td></tr>
+<tr><td class="l">2020</td><td>51</td><td class="bad">0,824</td><td class="mid">0,882</td><td class="mid">0,882</td></tr>
+<tr><td class="l">2021-2025</td><td>253</td><td class="mid">0,996</td><td>0,964</td><td>0,968</td></tr>
+<tr><td class="l">2026</td><td>37</td><td class="bad">0,676</td><td class="mid">0,865</td><td class="mid">0,838</td></tr>
+</table>
+<figure><img src="../outputs/brent_couverture_glissante.png"><figcaption>Figure 4. Couverture glissante sur 100 jours de l'IC à 95 % (tous horizons). La zone grise est le bruit attendu pour 100 observations.</figcaption></figure>
+<p>La variance constante échoue lors de <b>trois épisodes</b>, 2015-2016, 2020 et 2026, où la couverture glissante tombe à 0,64-0,70. Entre les crises, elle est <i>trop large</i> (≈ 1,00 en 2018 et de 2021 à 2025)&nbsp;: la fenêtre de 1000 jours «&nbsp;se souvient&nbsp;» du dernier choc. GARCH reste dans la zone de bruit sauf au début des crises, où il élargit son IC avec un retard de quelques jours. Le score d'intervalle à 95&nbsp;% confirme&nbsp;: 38 pour GARCH contre 96 pour AR(1) en 2020, 28 contre 38 en 2026.</p>
+<figure><img src="../outputs/brent_ic_vs_rendements.png"><figcaption>Figure 5. IC à 95 % prévus (AR(1) en rose, GARCH Student en bleu) et rendements réalisés. Les marqueurs signalent les rendements hors IC.</figcaption></figure>
+<p>La Figure 5 est parlante : en 2019, les deux modèles ont environ 5&nbsp;% de ratés&nbsp;; en 2020, 30 sur 255 jours (11,8&nbsp;%) pour AR(1) contre 18 pour GARCH (7,1&nbsp;%)&nbsp;; en 2026, 49 sur 189 (25,9&nbsp;%) contre 21 (11,1&nbsp;%). Aucun modèle n'attrape le jour du −64&nbsp;%.</p>
+
+<h2>5.3 Ouverture : TimesFM 3.0</h2>
+<figure><img src="../outputs/rapport_brent_couverture_periodes.png"><figcaption>Figure 6. Couverture réalisée par période et par modèle. Gauche : IC à 95 %, horizon 1 jour. Droite : IC à 80 %, horizons 1 à 5 jours, avec TimesFM 3.0.</figcaption></figure>
+<table>
+<caption>Tableau 6. Comparaison à 80 % (3235 prévisions par modèle).</caption>
+<tr><th class="l"></th><th>AR(1)</th><th>GARCH gaussien</th><th>GARCH Student</th><th>TimesFM 3.0</th></tr>
+<tr><td class="l">Couverture (cible 0,80)</td><td>0,852</td><td>0,828</td><td>0,798</td><td class="good">0,803</td></tr>
+<tr><td class="l">Kupiec (p)</td><td>&lt; 0,001</td><td>&lt; 0,001</td><td>0,79</td><td>0,71</td></tr>
+<tr><td class="l">Score d'intervalle</td><td>10,48</td><td>9,04</td><td class="good">8,97</td><td>9,07</td></tr>
+<tr><td class="l">Couverture 2026</td><td class="bad">0,614</td><td>0,772</td><td>0,741</td><td>0,778</td></tr>
+</table>
+<p>Au test de Diebold-Mariano sur le score d'intervalle, TimesFM est <b>significativement meilleur que la variance constante</b> (écart −1,41 ; $p<0{,}001$) et <b>indiscernable de GARCH</b> (écart +0,11 ; $p=0{,}099$ contre GARCH Student ; +0,03 ; $p=0{,}62$ contre GARCH gaussien). Le résultat tient en ne gardant que l'horizon 1. Sur la prévision ponctuelle, aucun modèle ne bat la prévision nulle (RMSE 3,03&nbsp;% ; TimesFM 3,10&nbsp;%)&nbsp;: les rendements du pétrole ne sont pas prévisibles en moyenne.</p>
+<p>Ce que cela dit&nbsp;: un modèle préentraîné, sans le moindre ajustement sur ces données, adapte la largeur de son intervalle au régime de volatilité aussi bien qu'un GARCH ajusté à chaque origine. Ce que cela ne dit pas : TimesFM ne fournit pas d'IC à 95&nbsp;%, donc nous ne pouvons pas juger ses queues, là où l'écart était le plus fort.</p>
+
+<h1>6. Discussion et limites</h1>
+<h2>6.1 Ce que nous retenons</h2>
+<ol>
+<li><b>Un IC à 95&nbsp;% n'est pas une garantie.</b> Sa couverture réelle dépend de la taille d'échantillon et du régime de volatilité, de 63&nbsp;% à près de 100&nbsp;% dans nos expériences.</li>
+<li><b>Les diagnostics de résidus ne voient pas la sur-paramétrisation.</b> Un ARIMA aux racines compensées passe Ljung-Box avec des paramètres faux.</li>
+<li><b>Il faut une variance qui évolue.</b> Sur le pétrole, GARCH corrige l'essentiel du défaut de la variance constante.</li>
+<li><b>L'enjeu est l'incertitude, pas le point central.</b> Les rendements ne sont pas prévisibles en moyenne.</li>
+</ol>
+<h2>6.2 Recommandations pratiques</h2>
+<ul>
+<li>Ne pas ajuster un GARCH sur moins de quelques centaines d'observations&nbsp;; vérifier l'absence de solution au bord ($\hat\alpha=0$ ou $\hat\beta\approx1$).</li>
+<li>Comparer plusieurs spécifications avant de croire un ARIMA avec racines AR et MA proches.</li>
+<li>Réestimer sur fenêtre glissante et surveiller la couverture réalisée de ses propres prévisions.</li>
+</ul>
+<h2>6.3 Limites</h2>
+<ol>
+<li><b>Objets différents.</b> En simulation, nous mesurons l'IC d'un <i>paramètre</i>&nbsp;; sur le Brent, l'IC d'une <i>observation</i>. Les deux montrent un IC mal calibré, mais l'un ne confirme pas l'autre.</li>
+<li><b>Un seul actif</b>, une taille de fenêtre (1000 jours), un pas de ré-estimation (5 jours). Les résultats ne se généralisent pas sans nouvelle expérience.</li>
+<li><b>Petits effectifs</b> en crise&nbsp;: 51 points en 2020 et 37 en 2026 (incertitude de ±3 à 5 points sur la couverture).</li>
+<li><b>Seuils choisis par nous</b> (25&nbsp;%, 90&nbsp;%)&nbsp;: nous montrons donc les courbes complètes et pas seulement le $T$ minimal.</li>
+<li><b>TimesFM</b>&nbsp;: pas d'IC à 95&nbsp;% ; le préentraînement sur plus de 1000 milliards de points réels ne permet pas d'exclure que des séries de pétrole en fassent partie&nbsp;; poids sous licence non commerciale.</li>
+<li><b>Tests multiples</b>&nbsp;: une vingtaine de comparaisons Diebold-Mariano&nbsp;; un résultat isolé à $p\approx0{,}03$ est indicatif et non concluant.</li>
+<li><b>Bruit gaussien uniquement</b> en simulation&nbsp;; le bruit de Student est codé mais non exploité.</li>
+<li><b>Données</b>&nbsp;: les prix de 2026 sont pris tels quels sur FRED, sans recoupement avec une autre source.</li>
+</ol>
+
+<h1>7. Conclusion</h1>
+<p>Nous avons montré, par simulation puis sur le Brent, que l'intervalle à 95&nbsp;% annoncé par un logiciel n'est pas à prendre au pied de la lettre&nbsp;: sa couverture réelle varie fortement avec la taille d'échantillon et le régime de volatilité, et les diagnostics usuels ne l'indiquent pas toujours. Les modèles AR sont sains très tôt&nbsp;; les modèles de volatilité demandent des centaines d'observations&nbsp;; un ARIMA aux racines presque compensées reste mal estimé jusqu'à $T=2000$. Sur le pétrole, une variance dépendante du temps, qu'elle vienne d'un GARCH ou d'un modèle de fondation, rend l'intervalle beaucoup plus honnête qu'une variance constante.</p>
+<p>Les extensions naturelles sont&nbsp;: d'autres actifs et d'autres tailles de fenêtre, le bruit de Student en simulation, le test de ces règles sur des séries de nature différente (taux de change, électricité), et l'usage d'intervalles à 95&nbsp;% pour les modèles de fondation qui les fourniraient.</p>
+
+<h1 class="newpage">Annexes</h1>
+<h2>A. Reproduction</h2>
+<table style="font-size:9pt; text-align:left;">
+<tr><td class="l"><code>python run_demo.py ar1 limite 1000</code></td><td class="l">un scénario de simulation, 1000 répétitions</td></tr>
+<tr><td class="l"><code>python analyse_donnees.py</code></td><td class="l">tests préalables sur Brent et WTI</td></tr>
+<tr><td class="l"><code>python rolling_brent.py garch_t</code></td><td class="l">prévision glissante (ar1, arma11, garch_n, garch_t)</td></tr>
+<tr><td class="l"><code>python rolling_timesfm.py</code></td><td class="l">prévision glissante TimesFM 3.0 (poids 1,3 Go)</td></tr>
+<tr><td class="l"><code>python resume_rolling.py</code><br><code>python compare_timesfm.py</code><br><code>python test_dm.py</code></td><td class="l">couvertures, comparaison à 80 %, tests de significativité</td></tr>
+<tr><td class="l"><code>python figures_rapport.py</code></td><td class="l">figures de synthèse</td></tr>
+</table>
+<p class="note">Environnement : Python 3.12, numpy, pandas, statsmodels, arch, matplotlib, torch 2.6.0 CPU et timesfm 3.0.2. Le code et les données sont dans le dépôt du projet (<code>simts/</code>, <code>data/</code>, <code>outputs/</code>).</p>
+
+<h2>Références</h2>
+<ol class="refs">
+<li>Box, G. et Jenkins, G. (1970), <i>Time Series Analysis: Forecasting and Control</i>.</li>
+<li>Engle, R. (1982), Autoregressive conditional heteroscedasticity with estimates of the variance of United Kingdom inflation, <i>Econometrica</i> 50(4).</li>
+<li>Bollerslev, T. (1986), Generalized autoregressive conditional heteroskedasticity, <i>Journal of Econometrics</i> 31(3).</li>
+<li>Engle, R. et Granger, C. (1987), Co-integration and error correction, <i>Econometrica</i> 55(2).</li>
+<li>Diebold, F. et Mariano, R. (1995), Comparing predictive accuracy, <i>Journal of Business &amp; Economic Statistics</i> 13(3).</li>
+<li>Kupiec, P. (1995), Techniques for verifying the accuracy of risk measurement models, <i>Journal of Derivatives</i> 3(2).</li>
+<li>Gneiting, T. et Raftery, A. (2007), Strictly proper scoring rules, prediction, and estimation, <i>Journal of the American Statistical Association</i> 102(477).</li>
+<li>Seabold, S. et Perktold, J. (2010), Statsmodels: econometric and statistical modeling with Python, <i>SciPy</i>.</li>
+<li>Das, A., Kong, W., Sen, R. et Zhou, Y. (2024), A decoder-only foundation model for time-series forecasting, <i>ICML</i>.</li>
+<li>Jain, A. et Sen, R. (2026), TimesFM-3: a zero-shot foundation model for multivariate forecasting, Google Research (blog), 31 août 2026.</li>
+<li>Federal Reserve Bank of St. Louis, FRED : séries <code>DCOILBRENTEU</code> et <code>DCOILWTICO</code>.</li>
+</ol>
+</body>
+</html>
