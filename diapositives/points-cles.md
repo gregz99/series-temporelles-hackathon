@@ -3,6 +3,9 @@
 **Fil conducteur** : une question → une méthode → la preuve en laboratoire → la preuve dans le réel → la leçon.
 Chaque diapositive : **une idée, un chiffre**. Texte rédigé facultatif : `texte-oral.md`.
 
+**Répartition** : **A (Grégoire)** diapos 1, 2, 3 et 10 · **B** diapos 4, 5, 6 · **C** diapos 7, 8, 9.
+Relais : A → B « voyons d'abord sans anomalie » ; B → C « voyons si on le retrouve dans le réel » ; C → A « je laisse conclure ».
+
 **La phrase à avoir en tête :** un modèle donne un résultat propre même quand les données contiennent un accident, et il ne prévient pas ; il faut savoir quel accident casse quel modèle.
 
 ## 1. Titre

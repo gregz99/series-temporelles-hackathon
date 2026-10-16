@@ -21,14 +21,17 @@ anomalie survient ? »** Chiffres issus de `rapport/rapport.pdf`.
 | 10 | 8:40-9:30 | Ce qu'on retient | 3 messages et 4 limites. |
 | 11 | secours | Annexe : d'où vient le 95 % | À montrer seulement si on pose la question. |
 
-## Répartition proposée à trois
+## Répartition à trois
 
-- **Personne A** : diapositives 1 à 4 (3 min 35) : question, méthode, T minimal.
-- **Personne B** : diapositives 5 à 7 (3 min 15) : anomalies, résultats, Brent.
-- **Personne C** : diapositives 8 à 10 (2 min 40) : modèles sur le Brent, TimesFM, conclusion, et le relais pour les questions.
+- **Personne A (Grégoire)** : diapositives **1, 2, 3 puis 10** (3 min 10) : ouvre avec la question, le sujet et la méthode, et **referme** avec la conclusion.
+- **Personne B (Rassim ou Yassine, à choisir)** : diapositives **4, 5, 6** (3 min 30) : le cœur, simulation sans anomalie, cartes de chaleur, deux résultats.
+- **Personne C (l'autre)** : diapositives **7, 8, 9** (2 min 50) : le réel, Brent, variance constante contre GARCH, TimesFM.
 
-À répartir selon qui a travaillé sur quoi. Chacun doit pouvoir **expliquer toutes
-les diapositives** : les questions peuvent venir à n'importe lequel.
+Relais : A → B « voyons d'abord ce que ça donne sans anomalie » ; B → C « voyons si on
+le retrouve dans le réel » ; C → A « je laisse conclure ».
+
+Qui répond aux questions : méthode et sujet → A ; simulation → B ; Brent et TimesFM → C.
+Chacun doit pouvoir expliquer **toutes** les diapositives : le jury peut interroger n'importe qui.
 
 ## Les 5 phrases à savoir par cœur
 
