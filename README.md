@@ -10,8 +10,9 @@ anomalie ? Application au Brent (FRED) et ouverture sur TimesFM 3.0.
 
 Rapport complet : `rapport/rapport.pdf` (sources : `rapport/_corps.html`,
 `rapport/_assemble.py`).
-Diapositives de l'oral (10 min) : `diapositives/diapositives.pdf`, notes d'orateur
-dans `diapositives/notes.md`, fiche d'oral dans `ORAL.md`.
+Diapositives de l'oral (10 min) : `diapositives/diapositives.pdf`, points clés
+par diapositive dans `diapositives/points-cles.md`, notes rédigées dans `diapositives/notes.md`,
+fiche d'oral dans `ORAL.md`.
 
 ## Démarche (celle de la consigne)
 1. Choisir un modèle : AR(1/2), MA(1/2), ARIMA(1,1), ARCH(1), GARCH(1,1)
